@@ -1,7 +1,6 @@
 "use server";
 
 import { Resend } from "resend";
-import { normalizeQasSenderDomain } from "@/lib/email-addresses";
 import type {
   EmailFormData,
   EmailRecipient,
@@ -117,7 +116,7 @@ export async function sendEmails(
   try {
     const normalizedFormData = {
       ...formData,
-      from: normalizeQasSenderDomain(formData.from.trim()),
+      from: formData.from.trim(),
     };
 
     // Validation

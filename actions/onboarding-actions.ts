@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { fillPdfTemplate } from "@/lib/pdf-fill";
 import { removeDiacritics } from "@/lib/diacritics";
-import { DEFAULT_ONBOARDING_FROM, normalizeQasSenderDomain } from "@/lib/email-addresses";
+import { DEFAULT_ONBOARDING_FROM } from "@/lib/email-addresses";
 import * as fs from "fs/promises";
 import * as path from "path";
 import type {
@@ -18,17 +18,17 @@ import type {
   SenderInfo,
 } from "@/lib/types";
 
-let resendSalesClient: Resend | null = null;
+let resendClient: Resend | null = null;
 
-function getResendSalesClient(): Resend {
-  if (!resendSalesClient) {
+function getResendClient(): Resend {
+  if (!resendClient) {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       throw new Error("RESEND_API_KEY environment variable is not configured");
     }
-    resendSalesClient = new Resend(apiKey);
+    resendClient = new Resend(apiKey);
   }
-  return resendSalesClient;
+  return resendClient;
 }
 
 function isValidFromField(from: string): boolean {
@@ -38,15 +38,11 @@ function isValidFromField(from: string): boolean {
 }
 
 function getOnboardingFromEmail(): string {
-  const configuredFrom =
-    process.env.RESEND_SALES_FROM_EMAIL ||
-    process.env.ONBOARDING_FROM_EMAIL ||
-    DEFAULT_ONBOARDING_FROM;
-  const from = normalizeQasSenderDomain(configuredFrom.trim());
+  const from = (process.env.ONBOARDING_FROM_EMAIL || DEFAULT_ONBOARDING_FROM).trim();
 
   if (!isValidFromField(from)) {
     throw new Error(
-      "RESEND_SALES_FROM_EMAIL must use 'Display Name <email@domain.com>' or 'email@domain.com' format"
+      "ONBOARDING_FROM_EMAIL must use 'Display Name <email@domain.com>' or 'email@domain.com' format"
     );
   }
 
@@ -578,7 +574,7 @@ export async function sendOnboardingEmail(
       cc.push(student.parent_email);
     }
 
-    const { data, error } = await getResendSalesClient().emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: getOnboardingFromEmail(),
       to: student.student_email,
       cc: cc.length > 0 ? cc : undefined,

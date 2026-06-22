@@ -6,6 +6,7 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { sendEmails } from "@/actions/email-actions";
 import { saveCustomTemplate, updateTemplate } from "@/actions/template-actions";
@@ -15,7 +16,11 @@ import { InfoBox } from "./info-box";
 import { SendResultModal } from "./send-result-modal";
 import { SaveTemplateModal } from "./save-template-modal";
 import { CSVRecipientUpload } from "./csv-recipient-upload";
-import { DEFAULT_EMAIL_SENDER_FROM } from "@/lib/email-addresses";
+import {
+  DEFAULT_EMAIL_SENDER_FROM,
+  QAS_CONTACT_FROM,
+  QAS_SALES_FROM,
+} from "@/lib/email-addresses";
 import type { EmailTemplate, EmailFormData, BatchEmailResult } from "@/lib/types";
 
 interface EmailSenderFormProps {
@@ -89,7 +94,7 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -228,6 +233,10 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
   };
 
   const previewSample = getPreviewSample();
+  const senderOptions = [
+    { value: QAS_CONTACT_FROM, label: t("fromContact") },
+    { value: QAS_SALES_FROM, label: t("fromSales") },
+  ];
 
   return (
     <div className="space-y-6">
@@ -251,11 +260,11 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
               <label className="text-sm font-medium text-foreground">
                 {t("from")} <span className="text-destructive">*</span>
               </label>
-              <Input
+              <Select
                 name="from"
                 value={formData.from}
                 onChange={handleInputChange}
-                placeholder={t("fromPlaceholder")}
+                options={senderOptions}
               />
               <p className="text-xs text-muted-foreground">{t("fromHint")}</p>
             </div>
