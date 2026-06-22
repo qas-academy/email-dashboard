@@ -1,6 +1,7 @@
 import { Pool, QueryResult, QueryResultRow } from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
+const databaseSsl = process.env.DATABASE_SSL?.toLowerCase();
 
 if (!databaseUrl) {
   throw new Error(
@@ -10,7 +11,10 @@ if (!databaseUrl) {
 
 const poolConfig = {
   connectionString: databaseUrl,
-  ssl: { rejectUnauthorized: false },
+  ssl:
+    databaseSsl === "false" || databaseSsl === "disable"
+      ? false
+      : { rejectUnauthorized: false },
   max: 20, // Increased from 10 for better concurrency
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
