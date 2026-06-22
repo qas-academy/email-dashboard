@@ -1,8 +1,9 @@
-const SUPER_ADMIN_EMAIL = "emaildashboard@gmail.com";
+import { isConfiguredAdminEmail } from "./admin-emails";
+
 const SUPER_ADMIN_LABEL = "Super Admin";
 
 export function getUserDisplayName(email: string | null | undefined, fullName: string | null | undefined): string {
-  if (email?.toLowerCase() === SUPER_ADMIN_EMAIL) {
+  if (isConfiguredAdminEmail(email)) {
     return SUPER_ADMIN_LABEL;
   }
 

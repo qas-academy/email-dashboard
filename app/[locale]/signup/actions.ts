@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { query } from "@/lib/db";
+import { isConfiguredAdminEmail } from "@/lib/admin-emails";
 
 export async function signup(formData: FormData) {
   const supabase = await createClient();
@@ -50,7 +51,7 @@ export async function signup(formData: FormData) {
     // User created but not logged in = email confirmation required
     // Still create app_user record for when they confirm
     try {
-      const role = email === process.env.ADMIN_EMAIL ? 'super_admin' : null;
+      const role = isConfiguredAdminEmail(email) ? 'super_admin' : null;
       await query(
         `INSERT INTO app_users (auth_user_id, email, full_name, role, is_active)
          VALUES ($1, $2, $3, $4, true)
@@ -68,7 +69,7 @@ export async function signup(formData: FormData) {
   // User is logged in immediately (email confirmation disabled in Supabase)
   if (data.user && data.session) {
     try {
-      const role = email === process.env.ADMIN_EMAIL ? 'super_admin' : null;
+      const role = isConfiguredAdminEmail(email) ? 'super_admin' : null;
       await query(
         `INSERT INTO app_users (auth_user_id, email, full_name, role, is_active)
          VALUES ($1, $2, $3, $4, true)

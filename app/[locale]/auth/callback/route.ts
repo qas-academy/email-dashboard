@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { routing } from "@/i18n/routing";
+import { isConfiguredAdminEmail } from "@/lib/admin-emails";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     if (user) {
       try {
         // Determine role - super_admin for main admin email, null for others
-        const role = user.email === process.env.ADMIN_EMAIL ? 'super_admin' : null;
+        const role = isConfiguredAdminEmail(user.email) ? 'super_admin' : null;
         const fullName = user.user_metadata?.full_name || user.user_metadata?.name || null;
         const avatarUrl = user.user_metadata?.avatar_url || null;
 

@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { AppUser, UserRole, DashboardPage, RolePermission } from "@/lib/types";
+import { isConfiguredAdminEmail } from "@/lib/admin-emails";
 
 // Helper to verify current user is super_admin
 async function verifySuperAdmin(): Promise<{ isAdmin: boolean; userId: string | null }> {
@@ -106,7 +107,7 @@ export async function assignRole(userId: string, role: UserRole): Promise<{ succ
   }
 
   // Cannot change role of main super_admin account
-  if (user.email === process.env.ADMIN_EMAIL) {
+  if (isConfiguredAdminEmail(user.email)) {
     return { success: false, message: "Cannot change role of the main super_admin account" };
   }
 
@@ -141,7 +142,7 @@ export async function toggleUserActive(userId: string, isActive: boolean): Promi
   );
 
   const userEmail = userResult.rows[0]?.email;
-  if (userEmail === process.env.ADMIN_EMAIL && !isActive) {
+  if (isConfiguredAdminEmail(userEmail) && !isActive) {
     return { success: false, message: "Cannot deactivate the main super_admin account" };
   }
 
@@ -267,7 +268,7 @@ export async function deleteUser(userId: string): Promise<{ success: boolean; me
   }
 
   // Cannot delete main super_admin
-  if (user.email === process.env.ADMIN_EMAIL) {
+  if (isConfiguredAdminEmail(user.email)) {
     return { success: false, message: "Cannot delete the main super_admin account" };
   }
 
