@@ -15,6 +15,7 @@ import { InfoBox } from "./info-box";
 import { SendResultModal } from "./send-result-modal";
 import { SaveTemplateModal } from "./save-template-modal";
 import { CSVRecipientUpload } from "./csv-recipient-upload";
+import { DEFAULT_EMAIL_SENDER_FROM } from "@/lib/email-addresses";
 import type { EmailTemplate, EmailFormData, BatchEmailResult } from "@/lib/types";
 
 interface EmailSenderFormProps {
@@ -44,7 +45,7 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
 
   // Form state
   const [formData, setFormData] = useState<EmailFormData>({
-    from: "QAS Academy <info@qascademy.com>",
+    from: DEFAULT_EMAIL_SENDER_FROM,
     to: "",
     names: "",
     cc: "",

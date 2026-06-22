@@ -246,7 +246,7 @@
     "title": "Batch Email Sender",
     "description": "Send single or batch emails using Resend API",
     "from": "From",
-    "fromPlaceholder": "QAS Academy '<'info@qascademy.com'>'",
+    "fromPlaceholder": "QAS Academy '<'info@info.qascademy.com'>'",
     "fromHint": "Required format: \"Display Name '<'email@domain.com'>'\"",
     "to": "To",
     "toPlaceholder": "recipient@example.com or email1@example.com, email2@example.com",

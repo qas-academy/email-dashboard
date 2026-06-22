@@ -246,7 +246,7 @@
     "title": "Gửi Email Hàng Loạt",
     "description": "Gửi email đơn lẻ hoặc hàng loạt sử dụng Resend API",
     "from": "Từ",
-    "fromPlaceholder": "QAS Academy '<'info@qascademy.com'>'",
+    "fromPlaceholder": "QAS Academy '<'info@info.qascademy.com'>'",
     "fromHint": "Định dạng bắt buộc: \"Tên hiển thị '<'email@domain.com'>'\"",
     "to": "Đến",
     "toPlaceholder": "nguoinhan@example.com hoặc email1@example.com, email2@example.com",

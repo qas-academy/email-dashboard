@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { fillPdfTemplate } from "@/lib/pdf-fill";
 import { removeDiacritics } from "@/lib/diacritics";
+import { DEFAULT_ONBOARDING_FROM, normalizeQasSenderDomain } from "@/lib/email-addresses";
 import * as fs from "fs/promises";
 import * as path from "path";
 import type {
@@ -21,13 +22,35 @@ let resendSalesClient: Resend | null = null;
 
 function getResendSalesClient(): Resend {
   if (!resendSalesClient) {
-    const apiKey = process.env.RESEND_SALES_API_KEY;
+    const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      throw new Error("RESEND_SALES_API_KEY environment variable is not configured");
+      throw new Error("RESEND_API_KEY environment variable is not configured");
     }
     resendSalesClient = new Resend(apiKey);
   }
   return resendSalesClient;
+}
+
+function isValidFromField(from: string): boolean {
+  const emailOnlyRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const nameEmailRegex = /^.+\s*<[^\s@]+@[^\s@]+\.[^\s@]+>$/;
+  return emailOnlyRegex.test(from) || nameEmailRegex.test(from);
+}
+
+function getOnboardingFromEmail(): string {
+  const configuredFrom =
+    process.env.RESEND_SALES_FROM_EMAIL ||
+    process.env.ONBOARDING_FROM_EMAIL ||
+    DEFAULT_ONBOARDING_FROM;
+  const from = normalizeQasSenderDomain(configuredFrom.trim());
+
+  if (!isValidFromField(from)) {
+    throw new Error(
+      "RESEND_SALES_FROM_EMAIL must use 'Display Name <email@domain.com>' or 'email@domain.com' format"
+    );
+  }
+
+  return from;
 }
 
 function isValidEmail(email: string): boolean {
@@ -556,7 +579,7 @@ export async function sendOnboardingEmail(
     }
 
     const { data, error } = await getResendSalesClient().emails.send({
-      from: `QAS Academy <sales@qascademy.com>`,
+      from: getOnboardingFromEmail(),
       to: student.student_email,
       cc: cc.length > 0 ? cc : undefined,
       subject,

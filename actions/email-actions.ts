@@ -1,6 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
+import { normalizeQasSenderDomain } from "@/lib/email-addresses";
 import type {
   EmailFormData,
   EmailRecipient,
@@ -114,8 +115,13 @@ export async function sendEmails(
   formData: EmailFormData
 ): Promise<BatchEmailResult> {
   try {
+    const normalizedFormData = {
+      ...formData,
+      from: normalizeQasSenderDomain(formData.from.trim()),
+    };
+
     // Validation
-    if (!formData.from || !isValidFromField(formData.from)) {
+    if (!normalizedFormData.from || !isValidFromField(normalizedFormData.from)) {
       return {
         success: false,
         totalSent: 0,
@@ -126,7 +132,7 @@ export async function sendEmails(
       };
     }
 
-    if (!formData.to) {
+    if (!normalizedFormData.to) {
       return {
         success: false,
         totalSent: 0,
@@ -136,7 +142,7 @@ export async function sendEmails(
       };
     }
 
-    if (!formData.subject) {
+    if (!normalizedFormData.subject) {
       return {
         success: false,
         totalSent: 0,
@@ -146,7 +152,7 @@ export async function sendEmails(
       };
     }
 
-    if (!formData.htmlContent) {
+    if (!normalizedFormData.htmlContent) {
       return {
         success: false,
         totalSent: 0,
@@ -157,9 +163,9 @@ export async function sendEmails(
     }
 
     // Parse recipients
-    const emails = parseEmails(formData.to);
-    const names = parseNames(formData.names || "");
-    const ccEmails = formData.cc ? parseEmails(formData.cc) : [];
+    const emails = parseEmails(normalizedFormData.to);
+    const names = parseNames(normalizedFormData.names || "");
+    const ccEmails = normalizedFormData.cc ? parseEmails(normalizedFormData.cc) : [];
 
     // Validate all recipient emails
     const invalidEmails = emails.filter((e) => !isValidEmail(e));
@@ -190,7 +196,7 @@ export async function sendEmails(
 
     // Single email - use simple send
     if (recipients.length === 1) {
-      const prepared = prepareEmail(formData, recipients[0], ccEmails);
+      const prepared = prepareEmail(normalizedFormData, recipients[0], ccEmails);
 
       try {
         const { data, error } = await getResendClient().emails.send({
@@ -247,7 +253,7 @@ export async function sendEmails(
 
     // Batch emails - prepare all emails with personalization
     const preparedEmails = recipients.map((recipient) =>
-      prepareEmail(formData, recipient, ccEmails)
+      prepareEmail(normalizedFormData, recipient, ccEmails)
     );
 
     const results: SingleEmailResult[] = [];
