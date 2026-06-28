@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Eye, Trash2, Play, Pause, Copy, Archive } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CampaignWithRates } from "@/lib/types";
+import { formatVietnamDate } from "@/lib/date-format";
 import { CampaignStatusBadge } from "./campaign-status-badge";
 import {
   deleteCampaign,
@@ -30,7 +31,6 @@ interface CampaignsTableProps {
 
 export function CampaignsTable({ campaigns, onCampaignUpdated }: CampaignsTableProps) {
   const t = useTranslations("campaigns");
-  const locale = useLocale();
   const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -146,15 +146,6 @@ export function CampaignsTable({ campaigns, onCampaignUpdated }: CampaignsTableP
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-
   const formatPercent = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
@@ -229,7 +220,7 @@ export function CampaignsTable({ campaigns, onCampaignUpdated }: CampaignsTableP
                   {campaign.stats_sent > 0 ? formatPercent(campaign.click_rate) : "-"}
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                  {formatDate(campaign.created_at)}
+                  {formatVietnamDate(campaign.created_at)}
                 </td>
                 <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
                   <TooltipProvider delayDuration={300}>

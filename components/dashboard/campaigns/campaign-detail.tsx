@@ -35,6 +35,7 @@ import {
 } from "@/actions/campaign-actions";
 import { CampaignStatusBadge } from "./campaign-status-badge";
 import { CampaignWizard } from "./campaign-wizard";
+import { formatVietnamDateTime } from "@/lib/date-format";
 import type { CampaignWithRates } from "@/lib/types";
 
 interface CampaignDetailProps {
@@ -112,11 +113,6 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
         router.push("/dashboard/campaigns");
       }
     });
-  };
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleString();
   };
 
   const formatRate = (rate: number) => `${rate.toFixed(1)}%`;
@@ -343,7 +339,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
                   <Calendar className="h-4 w-4" />
                   <span>{t("createdAt")}</span>
                 </div>
-                <span className="font-medium text-sm">{formatDate(campaign.created_at)}</span>
+                <span className="font-medium text-sm">{formatVietnamDateTime(campaign.created_at)}</span>
               </div>
 
               {campaign.scheduled_at && (
@@ -352,7 +348,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
                     <Clock className="h-4 w-4" />
                     <span>{t("scheduledAt")}</span>
                   </div>
-                  <span className="font-medium text-sm">{formatDate(campaign.scheduled_at)}</span>
+                  <span className="font-medium text-sm">{formatVietnamDateTime(campaign.scheduled_at)}</span>
                 </div>
               )}
 
@@ -362,7 +358,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
                     <Send className="h-4 w-4" />
                     <span>{t("startedAt")}</span>
                   </div>
-                  <span className="font-medium text-sm">{formatDate(campaign.started_at)}</span>
+                  <span className="font-medium text-sm">{formatVietnamDateTime(campaign.started_at)}</span>
                 </div>
               )}
 
@@ -372,7 +368,7 @@ export function CampaignDetail({ campaign }: CampaignDetailProps) {
                     <CheckCircle className="h-4 w-4" />
                     <span>{t("finishedAt")}</span>
                   </div>
-                  <span className="font-medium text-sm">{formatDate(campaign.finished_at)}</span>
+                  <span className="font-medium text-sm">{formatVietnamDateTime(campaign.finished_at)}</span>
                 </div>
               )}
             </div>

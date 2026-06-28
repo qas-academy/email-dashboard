@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTranslations, getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { StatsGrid } from "@/components/dashboard/stats-grid";
 import { TrendAreaChart } from "@/components/dashboard/charts/trend-area-chart";
@@ -35,7 +35,6 @@ export default async function DashboardPage() {
 
 async function DashboardOverview() {
   const t = await getTranslations("dashboard");
-  const locale = await getLocale();
 
   // Fetch all dashboard data in parallel with error resilience
   const results = await Promise.allSettled([
@@ -80,7 +79,7 @@ async function DashboardOverview() {
         {/* Charts Row 1: Trend + Priority */}
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <TrendAreaChart data={trends} title={t("trends")} registrationsLabel={t("registrationsLabel")} locale={locale} emptyMessage={t("noData")} />
+            <TrendAreaChart data={trends} title={t("trends")} registrationsLabel={t("registrationsLabel")} emptyMessage={t("noData")} />
           </div>
           <div className="lg:col-span-1">
             <PriorityDonutChart data={priorityData} title={t("priorityBreakdown")} emptyMessage={t("noData")} />
@@ -96,7 +95,6 @@ async function DashboardOverview() {
             <ActivityFeed
               activities={activities}
               title={t("recentActivity")}
-              locale={locale}
               emptyMessage={t("noActivity")}
               translations={{
                 registered: t("registered"),

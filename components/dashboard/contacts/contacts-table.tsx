@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MarketingContact } from "@/lib/types";
+import { formatVietnamDate } from "@/lib/date-format";
 import { EngagementBadge } from "./engagement-badge";
 import { ContactStatusBadge } from "./contact-status-badge";
 import { ContactDetailModal } from "./contact-detail-modal";
@@ -18,7 +19,6 @@ interface ContactsTableProps {
 
 export function ContactsTable({ contacts, onContactDeleted }: ContactsTableProps) {
   const t = useTranslations("contacts");
-  const locale = useLocale();
   const [selectedContact, setSelectedContact] = useState<MarketingContact | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -50,15 +50,6 @@ export function ContactsTable({ contacts, onContactDeleted }: ContactsTableProps
     } finally {
       setDeletingId(null);
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
   };
 
   return (
@@ -135,10 +126,10 @@ export function ContactsTable({ contacts, onContactDeleted }: ContactsTableProps
                   )}
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                  {formatDate(contact.last_email_at)}
+                  {formatVietnamDate(contact.last_email_at)}
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                  {formatDate(contact.created_at)}
+                  {formatVietnamDate(contact.created_at)}
                 </td>
                 <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
                   <div className="flex justify-end gap-1">

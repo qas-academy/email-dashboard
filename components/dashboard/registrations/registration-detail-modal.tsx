@@ -1,8 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/modal";
 import { Registration } from "@/lib/types";
+import { formatVietnamDate, formatVietnamDateTime } from "@/lib/date-format";
 import { PriorityBadge } from "./priority-badge";
 import { PoolBadge } from "./pool-badge";
 import { StatusBadge } from "./status-badge";
@@ -38,18 +39,6 @@ export function RegistrationDetailModal({
   onClose,
 }: RegistrationDetailModalProps) {
   const t = useTranslations("registrations");
-  const locale = useLocale();
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   // Early return if no registration - also narrows type for TypeScript
   if (!registration) return null;
@@ -144,7 +133,7 @@ export function RegistrationDetailModal({
             />
             <DetailRow
               label={t("detail.testDate")}
-              value={registration.test_date}
+              value={formatVietnamDate(registration.test_date, registration.test_date || "-")}
             />
             <DetailRow
               label={t("detail.satTestStatus")}
@@ -177,7 +166,7 @@ export function RegistrationDetailModal({
             />
             <DetailRow
               label={t("detail.nextEmailDate")}
-              value={formatDate(registration.next_email_date)}
+              value={formatVietnamDate(registration.next_email_date)}
             />
           </div>
         </div>
@@ -190,11 +179,11 @@ export function RegistrationDetailModal({
           <div>
             <DetailRow
               label={t("createdAt")}
-              value={formatDate(registration.created_at)}
+              value={formatVietnamDateTime(registration.created_at)}
             />
             <DetailRow
               label={t("detail.updatedAt")}
-              value={formatDate(registration.updated_at)}
+              value={formatVietnamDateTime(registration.updated_at)}
             />
           </div>
         </div>

@@ -4,7 +4,6 @@ import type { RecentActivity } from "@/lib/types/dashboard";
 interface ActivityFeedProps {
   activities: RecentActivity[];
   title: string;
-  locale: string;
   emptyMessage?: string;
   translations: {
     registered: string;
@@ -15,7 +14,6 @@ interface ActivityFeedProps {
 export function ActivityFeed({
   activities,
   title,
-  locale,
   emptyMessage = "No recent activity",
   translations,
 }: ActivityFeedProps) {
@@ -32,7 +30,6 @@ export function ActivityFeed({
             <ActivityItem
               key={activity.id}
               activity={activity}
-              locale={locale}
               translations={translations}
             />
           ))

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getUserDisplayName } from "@/lib/user-display";
+import { formatVietnamDateTime } from "@/lib/date-format";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import type { StudentOnboarding, SenderInfo } from "@/lib/types";
 
@@ -89,21 +90,6 @@ export function OnboardingTable({
     window.addEventListener("scroll", close, true);
     return () => window.removeEventListener("scroll", close, true);
   }, [openDropdown]);
-
-  const formatRelativeTime = (dateString: string | null) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMin / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMin < 1) return t("justNow");
-    if (diffMin < 60) return `${diffMin}m`;
-    if (diffHours < 24) return `${diffHours}h`;
-    return `${diffDays}d`;
-  };
 
   const currentStudent = openDropdown ? students.find((s) => s.id === openDropdown) : null;
 
@@ -205,7 +191,7 @@ export function OnboardingTable({
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                      {formatRelativeTime(student.sent_at)}
+                      {formatVietnamDateTime(student.sent_at, "—")}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                       {student.sent_by ? (

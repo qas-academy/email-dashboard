@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Registration } from "@/lib/types";
+import { formatVietnamDate } from "@/lib/date-format";
 import { PriorityBadge } from "./priority-badge";
 import { PoolBadge } from "./pool-badge";
 import { StatusBadge } from "./status-badge";
@@ -17,7 +18,6 @@ interface RegistrationsTableProps {
 
 export function RegistrationsTable({ registrations }: RegistrationsTableProps) {
   const t = useTranslations("registrations");
-  const locale = useLocale();
   const [selectedRegistration, setSelectedRegistration] =
     useState<Registration | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,15 +30,6 @@ export function RegistrationsTable({ registrations }: RegistrationsTableProps) {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedRegistration(null);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
   };
 
   return (
@@ -112,7 +103,7 @@ export function RegistrationsTable({ registrations }: RegistrationsTableProps) {
                   />
                 </td>
                 <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                  {formatDate(registration.created_at)}
+                  {formatVietnamDate(registration.created_at)}
                 </td>
                 <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
                   <Button

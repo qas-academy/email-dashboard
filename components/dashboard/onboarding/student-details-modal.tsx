@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { getUserDisplayName } from "@/lib/user-display";
+import { formatVietnamDateTime } from "@/lib/date-format";
 import type { StudentOnboarding, SenderInfo } from "@/lib/types";
 
 interface StudentDetailsModalProps {
@@ -76,7 +77,7 @@ export function StudentDetailsModal({ isOpen, onClose, student, senderInfo }: St
             {student.sent_at && (
               <div className="flex gap-2 text-sm">
                 <span className="text-muted-foreground">{t("sentAt")}:</span>
-                <span className="font-medium">{new Date(student.sent_at).toLocaleString()}</span>
+                <span className="font-medium">{formatVietnamDateTime(student.sent_at)}</span>
               </div>
             )}
             {student.sent_by && (

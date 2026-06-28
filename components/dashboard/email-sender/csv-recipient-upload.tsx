@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { importContacts } from "@/actions/contact-actions";
+import { getVietnamDateKey } from "@/lib/date-format";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -166,7 +167,7 @@ export function CSVRecipientUpload({ onRecipientsLoaded }: CSVRecipientUploadPro
 
         const result = await importContacts(
           contactsData,
-          `email_sender_${new Date().toISOString().split("T")[0]}`
+          `email_sender_${getVietnamDateKey()}`
         );
 
         setImportResult({

@@ -26,6 +26,7 @@ import {
   type SalesRegistration,
   type SalesStatus,
 } from "@/lib/types";
+import { formatVietnamDate } from "@/lib/date-format";
 
 interface SalesBoardContentProps {
   initialRegistrations: SalesRegistration[];
@@ -70,19 +71,6 @@ function formatName(registration: SalesRegistration) {
   }
 
   return firstName || lastName || "Unnamed lead";
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "No date";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
 }
 
 function parseOptionalInteger(value: string, label: string) {
@@ -385,7 +373,7 @@ function LeadCard({
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <CalendarDays className="h-3.5 w-3.5" />
-          {formatDate(registration.created_at)}
+          {formatVietnamDate(registration.created_at, "No date")}
         </span>
         <div className="flex items-center gap-2">
           <select

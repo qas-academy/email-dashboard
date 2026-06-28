@@ -7,6 +7,7 @@ import { User, ToggleLeft, ToggleRight, Trash2, X, AlertTriangle } from "lucide-
 import { RoleSelect } from "./role-select";
 import { toggleUserActive, deleteUser } from "@/actions/rbac-actions";
 import { getUserDisplayName } from "@/lib/user-display";
+import { formatVietnamDate } from "@/lib/date-format";
 import type { AppUser } from "@/lib/types";
 
 interface UserTableProps {
@@ -57,14 +58,6 @@ export function UserTable({ users, onUpdate, currentUserId }: UserTableProps) {
   const canDeleteUser = (user: AppUser) => {
     // Cannot delete super_admin or yourself
     return user.role !== 'super_admin' && user.auth_user_id !== currentUserId;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   if (users.length === 0) {
@@ -145,7 +138,7 @@ export function UserTable({ users, onUpdate, currentUserId }: UserTableProps) {
                 </span>
               </td>
               <td className="py-3 px-4 text-sm text-muted-foreground">
-                {formatDate(user.created_at)}
+                {formatVietnamDate(user.created_at)}
               </td>
               <td className="py-3 px-4 text-right">
                 <div className="flex items-center justify-end gap-1">

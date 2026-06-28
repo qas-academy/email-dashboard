@@ -1,13 +1,13 @@
 "use client";
 
 import { AreaChart, type CustomTooltipProps } from "@tremor/react";
+import { formatVietnamDate } from "@/lib/date-format";
 import type { TrendDataPoint } from "@/lib/types/dashboard";
 
 interface TrendAreaChartProps {
   data: TrendDataPoint[];
   title: string;
   registrationsLabel?: string;
-  locale?: string;
   emptyMessage?: string;
 }
 
@@ -32,7 +32,7 @@ function CustomTooltip({ payload, active, label }: CustomTooltipProps) {
   );
 }
 
-export function TrendAreaChart({ data, title, registrationsLabel = "Registrations", locale = "en", emptyMessage = "No data available" }: TrendAreaChartProps) {
+export function TrendAreaChart({ data, title, registrationsLabel = "Registrations", emptyMessage = "No data available" }: TrendAreaChartProps) {
   // Handle empty data
   if (data.length === 0) {
     return (
@@ -45,13 +45,8 @@ export function TrendAreaChart({ data, title, registrationsLabel = "Registration
     );
   }
 
-  // Format dates for display based on locale
-  const dateLocale = locale === "vi" ? "vi-VN" : "en-US";
   const formattedData = data.map((point) => ({
-    date: new Date(point.date).toLocaleDateString(dateLocale, {
-      month: "short",
-      day: "numeric",
-    }),
+    date: formatVietnamDate(point.date),
     [registrationsLabel]: point.registrations,
   }));
 

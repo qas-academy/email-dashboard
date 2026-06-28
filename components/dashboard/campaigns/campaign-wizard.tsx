@@ -29,6 +29,10 @@ import {
 } from "@/actions/campaign-actions";
 import { getTemplateSummaries } from "@/actions/template-actions";
 import { getAllTags } from "@/actions/contact-actions";
+import {
+  formatVietnamDateTimeLocalInput,
+  vietnamDateTimeLocalInputToISOString,
+} from "@/lib/date-format";
 import type {
   Campaign,
   CampaignCreateInput,
@@ -559,9 +563,11 @@ export function CampaignWizard({ campaign, mode }: CampaignWizardProps) {
         </label>
         <Input
           type="datetime-local"
-          value={scheduledAt ? scheduledAt.slice(0, 16) : ""}
+          value={formatVietnamDateTimeLocalInput(scheduledAt)}
           onChange={(e) =>
-            setScheduledAt(e.target.value ? new Date(e.target.value).toISOString() : "")
+            setScheduledAt(
+              e.target.value ? vietnamDateTimeLocalInputToISOString(e.target.value) : ""
+            )
           }
           className="h-10"
         />

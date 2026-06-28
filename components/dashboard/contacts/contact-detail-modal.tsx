@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Mail, Calendar, Tag, Activity, Clock } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Card } from "@/components/ui/card";
 import { MarketingContact, ContactEvent } from "@/lib/types";
+import { formatVietnamDateTime } from "@/lib/date-format";
 import { EngagementBadge } from "./engagement-badge";
 import { ContactStatusBadge } from "./contact-status-badge";
 import { getContactHistory } from "@/actions/contact-actions";
@@ -22,7 +23,6 @@ export function ContactDetailModal({
   onClose,
 }: ContactDetailModalProps) {
   const t = useTranslations("contacts");
-  const locale = useLocale();
   const [historyState, setHistoryState] = useState<{
     contactId: string | null;
     events: ContactEvent[];
@@ -51,17 +51,6 @@ export function ContactDetailModal({
       isCurrent = false;
     };
   }, [contactId, isOpen]);
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   if (!contact) return null;
 
@@ -139,25 +128,25 @@ export function ContactDetailModal({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">{t("createdAt")}:</span>
-              <p className="font-medium">{formatDate(contact.created_at)}</p>
+              <p className="font-medium">{formatVietnamDateTime(contact.created_at)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">{t("lastEmail")}:</span>
-              <p className="font-medium">{formatDate(contact.last_email_at)}</p>
+              <p className="font-medium">{formatVietnamDateTime(contact.last_email_at)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">{t("lastOpened")}:</span>
-              <p className="font-medium">{formatDate(contact.last_opened_at)}</p>
+              <p className="font-medium">{formatVietnamDateTime(contact.last_opened_at)}</p>
             </div>
             <div>
               <span className="text-muted-foreground">{t("lastClicked")}:</span>
-              <p className="font-medium">{formatDate(contact.last_clicked_at)}</p>
+              <p className="font-medium">{formatVietnamDateTime(contact.last_clicked_at)}</p>
             </div>
             {contact.unsubscribed_at && (
               <div className="col-span-2">
                 <span className="text-muted-foreground">{t("unsubscribedAt")}:</span>
                 <p className="font-medium text-destructive">
-                  {formatDate(contact.unsubscribed_at)}
+                  {formatVietnamDateTime(contact.unsubscribed_at)}
                 </p>
               </div>
             )}
@@ -210,7 +199,7 @@ export function ContactDetailModal({
                   <div className="text-right">
                     <span className="text-xs capitalize">{event.type.replace("_", " ")}</span>
                     <p className="text-xs text-muted-foreground">
-                      {formatDate(event.timestamp)}
+                      {formatVietnamDateTime(event.timestamp)}
                     </p>
                   </div>
                 </div>

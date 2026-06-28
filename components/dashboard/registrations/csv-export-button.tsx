@@ -6,6 +6,10 @@ import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportRegistrations } from "@/actions/registration-actions";
 import { RegistrationFilters } from "@/lib/types";
+import {
+  formatVietnamDateTime,
+  getVietnamDateKey,
+} from "@/lib/date-format";
 
 interface CSVExportButtonProps {
   filters: RegistrationFilters;
@@ -31,8 +35,8 @@ export function CSVExportButton({ filters }: CSVExportButtonProps) {
         "Engagement Pool": reg.engagement_pool || "",
         "Is Qualified": reg.is_qualified ? "Yes" : "No",
         "Is Completed": reg.is_completed ? "Yes" : "No",
-        "Created At": reg.created_at || "",
-        "Updated At": reg.updated_at || "",
+        "Created At": formatVietnamDateTime(reg.created_at, ""),
+        "Updated At": formatVietnamDateTime(reg.updated_at, ""),
       }));
 
       // Generate CSV
@@ -46,7 +50,7 @@ export function CSVExportButton({ filters }: CSVExportButtonProps) {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `registrations_${new Date().toISOString().split("T")[0]}.csv`
+        `registrations_${getVietnamDateKey()}.csv`
       );
       link.style.visibility = "hidden";
       document.body.appendChild(link);

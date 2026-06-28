@@ -9,6 +9,12 @@ import type {
   RecentActivity,
   EmailActionStats,
 } from "@/lib/types/dashboard";
+import {
+  addDaysToDateKey,
+  addMonthsToDateKey,
+  getVietnamDateKey,
+  vietnamDateKeyToUtcISOString,
+} from "@/lib/date-format";
 
 const PRIORITY_COLORS: Record<number, string> = {
   1: "emerald",
@@ -35,10 +41,11 @@ function normalizePoolName(poolName: string): string {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    const now = new Date();
-    const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    const todayKey = getVietnamDateKey();
+    const [year, month] = todayKey.split("-").map(Number);
+    const firstDayThisMonthKey = `${year}-${String(month).padStart(2, "0")}-01`;
+    const firstDayLastMonthKey = addMonthsToDateKey(firstDayThisMonthKey, -1);
+    const firstDayNextMonthKey = addMonthsToDateKey(firstDayThisMonthKey, 1);
 
     // Single query with FILTER clauses for better performance
     const result = await query<{
@@ -54,15 +61,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE is_qualified = true) as qualified,
         COUNT(*) FILTER (WHERE is_completed = true) as completed,
-        COUNT(*) FILTER (WHERE created_at >= $1) as this_month,
-        COUNT(*) FILTER (WHERE created_at >= $2 AND created_at <= $3) as last_month,
-        COUNT(*) FILTER (WHERE is_qualified = true AND created_at >= $2 AND created_at <= $3) as qualified_last_month,
-        COUNT(*) FILTER (WHERE is_completed = true AND created_at >= $2 AND created_at <= $3) as completed_last_month
+        COUNT(*) FILTER (WHERE created_at >= $1 AND created_at < $3) as this_month,
+        COUNT(*) FILTER (WHERE created_at >= $2 AND created_at < $1) as last_month,
+        COUNT(*) FILTER (WHERE is_qualified = true AND created_at >= $2 AND created_at < $1) as qualified_last_month,
+        COUNT(*) FILTER (WHERE is_completed = true AND created_at >= $2 AND created_at < $1) as completed_last_month
       FROM qas_registrations`,
       [
-        firstDayThisMonth.toISOString(),
-        firstDayLastMonth.toISOString(),
-        lastDayLastMonth.toISOString(),
+        vietnamDateKeyToUtcISOString(firstDayThisMonthKey),
+        vietnamDateKeyToUtcISOString(firstDayLastMonthKey),
+        vietnamDateKeyToUtcISOString(firstDayNextMonthKey),
       ]
     );
 
@@ -94,32 +101,29 @@ export async function getRegistrationTrends(
   days: number = 30
 ): Promise<TrendDataPoint[]> {
   try {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const todayKey = getVietnamDateKey();
+    const startDateKey = addDaysToDateKey(todayKey, -(days - 1));
 
     const result = await query<{ date: string; count: string }>(
       `SELECT
-        DATE(created_at) as date,
+        TO_CHAR(created_at AT TIME ZONE 'Asia/Ho_Chi_Minh', 'YYYY-MM-DD') as date,
         COUNT(*) as count
       FROM qas_registrations
       WHERE created_at >= $1
-      GROUP BY DATE(created_at)
+      GROUP BY 1
       ORDER BY date ASC`,
-      [startDate.toISOString()]
+      [vietnamDateKeyToUtcISOString(startDateKey)]
     );
 
     // Fill in missing dates with 0
     const dataMap = new Map<string, number>();
     result.rows.forEach((row) => {
-      const dateStr = new Date(row.date).toISOString().split("T")[0];
-      dataMap.set(dateStr, Number(row.count));
+      dataMap.set(row.date, Number(row.count));
     });
 
     const trendData: TrendDataPoint[] = [];
     for (let i = 0; i < days; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - (days - 1 - i));
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = addDaysToDateKey(startDateKey, i);
       trendData.push({
         date: dateStr,
         registrations: dataMap.get(dateStr) || 0,

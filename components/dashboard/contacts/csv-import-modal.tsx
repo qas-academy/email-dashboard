@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CSVContact, CSVContactValidationError, ContactImportResult } from "@/lib/types";
+import { getVietnamDateKey } from "@/lib/date-format";
 import { validateContactCSV, importContacts, checkDuplicates } from "@/actions/contact-actions";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -153,7 +154,7 @@ export function CSVImportModal({ isOpen, onClose, onSuccess }: CSVImportModalPro
   const handleImport = async () => {
     setIsImporting(true);
     try {
-      const source = sourceName.trim() || `csv_import_${new Date().toISOString().split("T")[0]}`;
+      const source = sourceName.trim() || `csv_import_${getVietnamDateKey()}`;
       const result = await importContacts(parsedData, source);
       setImportResult(result);
       setStep("result");

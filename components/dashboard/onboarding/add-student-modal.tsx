@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createOnboardingStudent } from "@/actions/onboarding-actions";
+import { formatVietnamDate } from "@/lib/date-format";
 import type { CreateOnboardingInput } from "@/lib/types";
 
 interface AddStudentModalProps {
@@ -25,11 +26,7 @@ const COURSE_OPTIONS = [
 ];
 
 function getTodayString(): string {
-  const d = new Date();
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+  return formatVietnamDate(new Date());
 }
 
 function isValidEmail(email: string): boolean {
