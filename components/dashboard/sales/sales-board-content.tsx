@@ -566,11 +566,11 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
                 }}
                 onDragLeave={() => setDragOverStatus(null)}
                 onDrop={(event) => handleDrop(event, column.status)}
-                className={`min-h-[calc(100vh-15rem)] rounded-xl border border-border border-t-4 bg-muted/40 ${column.accentClass} ${
+                className={`min-h-[calc(100vh-15rem)] overflow-hidden rounded-xl border border-border border-t-4 bg-muted/40 ${column.accentClass} ${
                   isDragOver ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : ""
                 }`}
               >
-                <div className="sticky top-16 z-10 flex items-center justify-between rounded-t-xl border-b border-border bg-muted/95 px-4 py-3 backdrop-blur">
+                <div className="flex items-center justify-between border-b border-border bg-muted/95 px-4 py-3">
                   <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
                     {column.label}
                   </h2>
