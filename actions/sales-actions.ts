@@ -132,6 +132,22 @@ function revalidateSalesViews() {
   revalidatePath("/dashboard/registrations");
 }
 
+function serializeDate(value: string | Date | null | undefined) {
+  if (!value) return null;
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+function normalizeSalesRegistration(registration: SalesRegistration): SalesRegistration {
+  return {
+    ...registration,
+    created_at: serializeDate(registration.created_at) ?? "",
+    updated_at: serializeDate(registration.updated_at) ?? "",
+    test_date: serializeDate(registration.test_date),
+    next_email_date: serializeDate(registration.next_email_date),
+    sales_status: parseSalesStatus(registration.sales_status),
+  };
+}
+
 export async function getSalesRegistrations(search = ""): Promise<SalesRegistration[]> {
   await ensureSalesBoardSchema();
 
@@ -160,10 +176,7 @@ export async function getSalesRegistrations(search = ""): Promise<SalesRegistrat
     params
   );
 
-  return result.rows.map((registration) => ({
-    ...registration,
-    sales_status: parseSalesStatus(registration.sales_status),
-  }));
+  return result.rows.map(normalizeSalesRegistration);
 }
 
 export async function createSalesRegistration(
@@ -219,43 +232,46 @@ export async function createSalesRegistration(
 
   revalidateSalesViews();
 
-  return {
-    ...result.rows[0],
-    sales_status: parseSalesStatus(result.rows[0].sales_status),
-  };
+  return normalizeSalesRegistration(result.rows[0]);
 }
 
 export async function updateSalesRegistrationStatus(
   id: number,
   salesStatus: SalesStatus
-): Promise<SalesRegistration> {
-  await ensureSalesBoardSchema();
+): Promise<
+  | { success: true; registration: SalesRegistration }
+  | { success: false; error: string }
+> {
+  try {
+    await ensureSalesBoardSchema();
 
-  if (!Number.isFinite(id)) {
-    throw new Error("Registration id is required.");
+    if (!Number.isFinite(id)) {
+      return { success: false, error: "Registration id is required." };
+    }
+
+    const normalizedStatus = parseSalesStatus(salesStatus);
+
+    const result = await query<SalesRegistration>(
+      `UPDATE qas_registrations
+       SET sales_status = $2,
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [id, normalizedStatus]
+    );
+
+    if (result.rows.length === 0) {
+      return { success: false, error: "Registration not found." };
+    }
+
+    return {
+      success: true,
+      registration: normalizeSalesRegistration(result.rows[0]),
+    };
+  } catch (error) {
+    console.error("Failed to update sales status:", error);
+    return { success: false, error: "Failed to update sales status." };
   }
-
-  const normalizedStatus = parseSalesStatus(salesStatus);
-
-  const result = await query<SalesRegistration>(
-    `UPDATE qas_registrations
-     SET sales_status = $2,
-         updated_at = NOW()
-     WHERE id = $1
-     RETURNING *`,
-    [id, normalizedStatus]
-  );
-
-  if (result.rows.length === 0) {
-    throw new Error("Registration not found.");
-  }
-
-  revalidateSalesViews();
-
-  return {
-    ...result.rows[0],
-    sales_status: parseSalesStatus(result.rows[0].sales_status),
-  };
 }
 
 export async function deleteSalesRegistration(id: number): Promise<{ success: boolean }> {

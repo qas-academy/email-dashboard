@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useTransition } from "react";
-import type { DragEvent, FormEvent, PointerEvent } from "react";
+import type { FormEvent, PointerEvent } from "react";
 import {
   CalendarDays,
   GripVertical,
@@ -296,43 +296,58 @@ function AddLeadModal({ isOpen, onClose, onSubmit }: AddLeadModalProps) {
 interface LeadCardProps {
   registration: SalesRegistration;
   isBusy: boolean;
+  isDragging: boolean;
   onMove: (id: number, status: SalesStatus) => void;
   onDelete: (registration: SalesRegistration) => void;
-  onDragStart: (event: DragEvent<HTMLElement>, id: number) => void;
-  onDragEnd: () => void;
   onPointerDragStart: (event: PointerEvent<HTMLElement>, registration: SalesRegistration) => void;
   onPointerDragMove: (event: PointerEvent<HTMLElement>) => void;
   onPointerDragEnd: (event: PointerEvent<HTMLElement>) => void;
+  onPointerDragCancel: (event: PointerEvent<HTMLElement>) => void;
 }
 
 function LeadCard({
   registration,
   isBusy,
+  isDragging,
   onMove,
   onDelete,
-  onDragStart,
-  onDragEnd,
   onPointerDragStart,
   onPointerDragMove,
   onPointerDragEnd,
+  onPointerDragCancel,
 }: LeadCardProps) {
+  return (
+    <Card
+      onPointerDown={(event) => onPointerDragStart(event, registration)}
+      onPointerMove={onPointerDragMove}
+      onPointerUp={onPointerDragEnd}
+      onPointerCancel={onPointerDragCancel}
+      className={`cursor-grab touch-none select-none p-4 transition hover:border-muted-foreground/40 active:cursor-grabbing ${
+        isBusy ? "opacity-60" : ""
+      } ${isDragging ? "opacity-40" : ""}`}
+    >
+      <LeadCardBody registration={registration} onMove={onMove} onDelete={onDelete} isBusy={isBusy} />
+    </Card>
+  );
+}
+
+function LeadCardBody({
+  registration,
+  isBusy,
+  onMove,
+  onDelete,
+}: {
+  registration: SalesRegistration;
+  isBusy: boolean;
+  onMove: (id: number, status: SalesStatus) => void;
+  onDelete: (registration: SalesRegistration) => void;
+}) {
   const name = formatName(registration);
   const course = registration.course || "No course";
   const hasScores = registration.sat_score || registration.target_score;
 
   return (
-    <Card
-      draggable
-      onDragStart={(event) => onDragStart(event, registration.id)}
-      onDragEnd={onDragEnd}
-      onPointerDown={(event) => onPointerDragStart(event, registration)}
-      onPointerMove={onPointerDragMove}
-      onPointerUp={onPointerDragEnd}
-      onPointerCancel={onPointerDragEnd}
-      className={`cursor-grab touch-none select-none p-4 transition hover:border-muted-foreground/40 active:cursor-grabbing ${
-        isBusy ? "opacity-60" : ""
-      }`}
-    >
+    <>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold text-foreground" title={name}>
@@ -400,7 +415,51 @@ function LeadCard({
           </button>
         </div>
       </div>
-    </Card>
+    </>
+  );
+}
+
+interface DragPreview {
+  registration: SalesRegistration;
+  pointerX: number;
+  pointerY: number;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+}
+
+function DragPreviewCard({ preview }: { preview: DragPreview }) {
+  return (
+    <div
+      className="pointer-events-none fixed z-50 rounded-xl border border-ring/50 bg-card p-4 text-card-foreground opacity-95 shadow-2xl ring-2 ring-ring/30"
+      style={{
+        left: preview.pointerX - preview.offsetX,
+        top: preview.pointerY - preview.offsetY,
+        width: preview.width,
+      }}
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold text-foreground" title={formatName(preview.registration)}>
+            {formatName(preview.registration)}
+          </h3>
+          <p className="mt-1 truncate text-xs font-medium text-muted-foreground" title={preview.registration.course || "No course"}>
+            {preview.registration.course || "No course"}
+          </p>
+        </div>
+        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      </div>
+      <div className="space-y-2 text-xs text-muted-foreground">
+        <p className="flex min-w-0 items-center gap-2">
+          <Mail className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{preview.registration.email || "No email"}</span>
+        </p>
+        <p className="flex min-w-0 items-center gap-2">
+          <Phone className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{preview.registration.phone || "No phone"}</span>
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -411,6 +470,7 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<SalesStatus | null>(null);
+  const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SalesRegistration | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -442,9 +502,16 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
 
     startTransition(async () => {
       try {
-        const updated = await updateSalesRegistrationStatus(id, status);
+        const result = await updateSalesRegistrationStatus(id, status);
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         setRegistrations((current) =>
-          current.map((registration) => (registration.id === id ? updated : registration))
+          current.map((registration) =>
+            registration.id === id ? result.registration : registration
+          )
         );
       } catch (err) {
         setRegistrations(previous);
@@ -481,18 +548,11 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
     });
   };
 
-  const handleDragStart = (event: DragEvent<HTMLElement>, id: number) => {
-    draggedIdRef.current = id;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("application/x-qas-sales-lead-id", String(id));
-    event.dataTransfer.setData("text/plain", String(id));
-    setDraggedId(id);
-  };
-
-  const handleDragEnd = () => {
+  const clearDragState = () => {
     draggedIdRef.current = null;
     setDraggedId(null);
     setDragOverStatus(null);
+    setDragPreview(null);
   };
 
   const handlePointerDragStart = (
@@ -512,18 +572,36 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
 
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
+
+    const rect = event.currentTarget.getBoundingClientRect();
     draggedIdRef.current = registration.id;
     setDraggedId(registration.id);
     setDragOverStatus(registration.sales_status);
+    setDragPreview({
+      registration,
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+      width: rect.width,
+    });
   };
 
   const handlePointerDragMove = (event: PointerEvent<HTMLElement>) => {
     if (draggedIdRef.current === null) return;
 
+    setDragPreview((current) =>
+      current
+        ? {
+            ...current,
+            pointerX: event.clientX,
+            pointerY: event.clientY,
+          }
+        : null
+    );
+
     const status = getStatusFromPoint(event.clientX, event.clientY);
-    if (status) {
-      setDragOverStatus(status);
-    }
+    setDragOverStatus(status);
   };
 
   const handlePointerDragEnd = (event: PointerEvent<HTMLElement>) => {
@@ -538,29 +616,19 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
     }
 
     const status = getStatusFromPoint(event.clientX, event.clientY);
-    handleDragEnd();
+    clearDragState();
 
     if (status) {
       moveRegistration(id, status);
     }
   };
 
-  const handleDrop = (event: DragEvent<HTMLElement>, status: SalesStatus) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const rawId =
-      event.dataTransfer.getData("application/x-qas-sales-lead-id") ||
-      event.dataTransfer.getData("text/plain");
-    const id = rawId ? Number(rawId) : draggedIdRef.current ?? draggedId;
-
-    draggedIdRef.current = null;
-    setDragOverStatus(null);
-    setDraggedId(null);
-
-    if (typeof id === "number" && Number.isFinite(id)) {
-      moveRegistration(id, status);
+  const handlePointerDragCancel = (event: PointerEvent<HTMLElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
+
+    clearDragState();
   };
 
   const total = registrations.length;
@@ -630,23 +698,6 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
               <section
                 key={column.status}
                 data-sales-status={column.status}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  event.dataTransfer.dropEffect = "move";
-                  setDragOverStatus(column.status);
-                }}
-                onDragEnter={(event) => {
-                  event.preventDefault();
-                  setDragOverStatus(column.status);
-                }}
-                onDragLeave={(event) => {
-                  const nextTarget = event.relatedTarget;
-
-                  if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-                    setDragOverStatus(null);
-                  }
-                }}
-                onDrop={(event) => handleDrop(event, column.status)}
                 className={`min-h-[calc(100vh-15rem)] overflow-hidden rounded-xl border border-border border-t-4 bg-muted/40 ${column.accentClass} ${
                   isDragOver ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : ""
                 }`}
@@ -666,13 +717,13 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
                       key={registration.id}
                       registration={registration}
                       isBusy={busyId === registration.id}
+                      isDragging={draggedId === registration.id}
                       onMove={moveRegistration}
                       onDelete={setDeleteTarget}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
                       onPointerDragStart={handlePointerDragStart}
                       onPointerDragMove={handlePointerDragMove}
                       onPointerDragEnd={handlePointerDragEnd}
+                      onPointerDragCancel={handlePointerDragCancel}
                     />
                   ))}
 
@@ -715,6 +766,8 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
         confirmText="Delete"
         isLoading={Boolean(deleteTarget && busyId === deleteTarget.id)}
       />
+
+      {dragPreview && <DragPreviewCard preview={dragPreview} />}
     </div>
   );
 }
