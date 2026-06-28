@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import type { DragEvent, FormEvent } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import type { DragEvent, FormEvent, PointerEvent } from "react";
 import {
   CalendarDays,
   GripVertical,
@@ -130,6 +130,13 @@ function groupByStatus(registrations: SalesRegistration[]) {
       {} as Record<SalesStatus, SalesRegistration[]>
     )
   );
+}
+
+function getStatusFromPoint(clientX: number, clientY: number) {
+  const target = document.elementFromPoint(clientX, clientY);
+  const status = target?.closest<HTMLElement>("[data-sales-status]")?.dataset.salesStatus;
+
+  return SALES_STATUSES.includes(status as SalesStatus) ? (status as SalesStatus) : null;
 }
 
 interface AddLeadModalProps {
@@ -305,6 +312,9 @@ interface LeadCardProps {
   onDelete: (registration: SalesRegistration) => void;
   onDragStart: (event: DragEvent<HTMLElement>, id: number) => void;
   onDragEnd: () => void;
+  onPointerDragStart: (event: PointerEvent<HTMLElement>, registration: SalesRegistration) => void;
+  onPointerDragMove: (event: PointerEvent<HTMLElement>) => void;
+  onPointerDragEnd: (event: PointerEvent<HTMLElement>) => void;
 }
 
 function LeadCard({
@@ -314,6 +324,9 @@ function LeadCard({
   onDelete,
   onDragStart,
   onDragEnd,
+  onPointerDragStart,
+  onPointerDragMove,
+  onPointerDragEnd,
 }: LeadCardProps) {
   const name = formatName(registration);
   const course = registration.course || "No course";
@@ -324,7 +337,11 @@ function LeadCard({
       draggable
       onDragStart={(event) => onDragStart(event, registration.id)}
       onDragEnd={onDragEnd}
-      className={`cursor-grab p-4 transition hover:border-muted-foreground/40 active:cursor-grabbing ${
+      onPointerDown={(event) => onPointerDragStart(event, registration)}
+      onPointerMove={onPointerDragMove}
+      onPointerUp={onPointerDragEnd}
+      onPointerCancel={onPointerDragEnd}
+      className={`cursor-grab touch-none select-none p-4 transition hover:border-muted-foreground/40 active:cursor-grabbing ${
         isBusy ? "opacity-60" : ""
       }`}
     >
@@ -409,6 +426,7 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
   const [busyId, setBusyId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SalesRegistration | null>(null);
   const [isPending, startTransition] = useTransition();
+  const draggedIdRef = useRef<number | null>(null);
   const grouped = useMemo(() => groupByStatus(registrations), [registrations]);
 
   const refresh = (search = searchQuery) => {
@@ -476,19 +494,83 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
   };
 
   const handleDragStart = (event: DragEvent<HTMLElement>, id: number) => {
+    draggedIdRef.current = id;
     event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("application/x-qas-sales-lead-id", String(id));
     event.dataTransfer.setData("text/plain", String(id));
     setDraggedId(id);
   };
 
-  const handleDrop = (event: DragEvent<HTMLElement>, status: SalesStatus) => {
-    event.preventDefault();
-    const rawId = event.dataTransfer.getData("text/plain");
-    const id = rawId ? Number(rawId) : draggedId;
+  const handleDragEnd = () => {
+    draggedIdRef.current = null;
     setDraggedId(null);
     setDragOverStatus(null);
+  };
 
-    if (id && Number.isFinite(id)) {
+  const handlePointerDragStart = (
+    event: PointerEvent<HTMLElement>,
+    registration: SalesRegistration
+  ) => {
+    if (event.button !== 0 || busyId === registration.id) return;
+
+    const target = event.target;
+
+    if (
+      target instanceof HTMLElement &&
+      target.closest("button, select, input, textarea, a")
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    draggedIdRef.current = registration.id;
+    setDraggedId(registration.id);
+    setDragOverStatus(registration.sales_status);
+  };
+
+  const handlePointerDragMove = (event: PointerEvent<HTMLElement>) => {
+    if (draggedIdRef.current === null) return;
+
+    const status = getStatusFromPoint(event.clientX, event.clientY);
+    if (status) {
+      setDragOverStatus(status);
+    }
+  };
+
+  const handlePointerDragEnd = (event: PointerEvent<HTMLElement>) => {
+    const id = draggedIdRef.current;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (id === null) {
+      return;
+    }
+
+    const status = getStatusFromPoint(event.clientX, event.clientY);
+    handleDragEnd();
+
+    if (status) {
+      moveRegistration(id, status);
+    }
+  };
+
+  const handleDrop = (event: DragEvent<HTMLElement>, status: SalesStatus) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const rawId =
+      event.dataTransfer.getData("application/x-qas-sales-lead-id") ||
+      event.dataTransfer.getData("text/plain");
+    const id = rawId ? Number(rawId) : draggedIdRef.current ?? draggedId;
+
+    draggedIdRef.current = null;
+    setDragOverStatus(null);
+    setDraggedId(null);
+
+    if (typeof id === "number" && Number.isFinite(id)) {
       moveRegistration(id, status);
     }
   };
@@ -559,12 +641,23 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
             return (
               <section
                 key={column.status}
+                data-sales-status={column.status}
                 onDragOver={(event) => {
                   event.preventDefault();
                   event.dataTransfer.dropEffect = "move";
                   setDragOverStatus(column.status);
                 }}
-                onDragLeave={() => setDragOverStatus(null)}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setDragOverStatus(column.status);
+                }}
+                onDragLeave={(event) => {
+                  const nextTarget = event.relatedTarget;
+
+                  if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+                    setDragOverStatus(null);
+                  }
+                }}
                 onDrop={(event) => handleDrop(event, column.status)}
                 className={`min-h-[calc(100vh-15rem)] overflow-hidden rounded-xl border border-border border-t-4 bg-muted/40 ${column.accentClass} ${
                   isDragOver ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : ""
@@ -588,10 +681,10 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
                       onMove={moveRegistration}
                       onDelete={setDeleteTarget}
                       onDragStart={handleDragStart}
-                      onDragEnd={() => {
-                        setDraggedId(null);
-                        setDragOverStatus(null);
-                      }}
+                      onDragEnd={handleDragEnd}
+                      onPointerDragStart={handlePointerDragStart}
+                      onPointerDragMove={handlePointerDragMove}
+                      onPointerDragEnd={handlePointerDragEnd}
                     />
                   ))}
 
