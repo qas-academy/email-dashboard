@@ -463,7 +463,7 @@ interface LeadCardProps {
   registration: SalesRegistration;
   isBusy: boolean;
   isDragging: boolean;
-  onMove: (id: number, status: SalesStatus) => void;
+  onMove: (id: string, status: SalesStatus) => void;
   onDelete: (registration: SalesRegistration) => void;
   onPointerDragStart: (event: PointerEvent<HTMLElement>, registration: SalesRegistration) => void;
   onPointerDragMove: (event: PointerEvent<HTMLElement>) => void;
@@ -505,7 +505,7 @@ function LeadCardBody({
 }: {
   registration: SalesRegistration;
   isBusy: boolean;
-  onMove: (id: number, status: SalesStatus) => void;
+  onMove: (id: string, status: SalesStatus) => void;
   onDelete: (registration: SalesRegistration) => void;
 }) {
   const name = formatName(registration);
@@ -648,14 +648,14 @@ export function SalesBoardContent({
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [assignmentTargetId, setAssignmentTargetId] = useState<number | null>(null);
-  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [assignmentTargetId, setAssignmentTargetId] = useState<string | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<SalesStatus | null>(null);
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SalesRegistration | null>(null);
   const [isPending, startTransition] = useTransition();
-  const draggedIdRef = useRef<number | null>(null);
+  const draggedIdRef = useRef<string | null>(null);
   const grouped = useMemo(() => groupByStatus(registrations), [registrations]);
   const assignmentTarget =
     assignmentTargetId !== null
@@ -674,7 +674,7 @@ export function SalesBoardContent({
   };
 
   const moveRegistration = (
-    id: number,
+    id: string,
     status: SalesStatus,
     assignee?: SalesAssignee | null
   ) => {
@@ -723,7 +723,7 @@ export function SalesBoardContent({
     });
   };
 
-  const requestMoveRegistration = (id: number, status: SalesStatus) => {
+  const requestMoveRegistration = (id: string, status: SalesStatus) => {
     if (status === "assigned") {
       const existing = registrations.find((registration) => registration.id === id);
 

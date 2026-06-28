@@ -15,7 +15,7 @@ const SALES_STATUS_SET = new Set<SalesStatus>(SALES_STATUSES);
 let salesSchemaReady: Promise<void> | null = null;
 
 type SalesRegistrationRow = Omit<SalesRegistration, "id"> & {
-  id: number | string;
+  id: number | string | null;
 };
 
 async function ensureSalesBoardSchema() {
@@ -149,19 +149,21 @@ function serializeDate(value: string | Date | null | undefined) {
   return value instanceof Date ? value.toISOString() : value;
 }
 
-function parseRegistrationId(value: unknown) {
-  const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim()
-        ? Number(value)
-        : NaN;
+function normalizeRegistrationId(value: unknown) {
+  if (typeof value === "number" && Number.isSafeInteger(value) && value > 0) {
+    return String(value);
+  }
 
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized || null;
+  }
+
+  return null;
 }
 
 function normalizeSalesRegistration(registration: SalesRegistrationRow): SalesRegistration {
-  const id = parseRegistrationId(registration.id);
+  const id = normalizeRegistrationId(registration.id);
 
   if (id === null) {
     throw new Error("Invalid registration id returned from database.");
@@ -321,7 +323,7 @@ export async function updateSalesRegistrationStatus(
   try {
     await ensureSalesBoardSchema();
 
-    const registrationId = parseRegistrationId(id);
+    const registrationId = normalizeRegistrationId(id);
 
     if (registrationId === null) {
       return { success: false, error: "Registration id is required." };
@@ -377,7 +379,7 @@ export async function updateSalesRegistrationStatus(
 export async function deleteSalesRegistration(id: number | string): Promise<{ success: boolean }> {
   await ensureSalesBoardSchema();
 
-  const registrationId = parseRegistrationId(id);
+  const registrationId = normalizeRegistrationId(id);
 
   if (registrationId === null) {
     throw new Error("Registration id is required.");

@@ -45,7 +45,8 @@ export const SALES_COLUMNS: SalesColumn[] = [
   },
 ];
 
-export type SalesRegistration = Registration & {
+export type SalesRegistration = Omit<Registration, "id"> & {
+  id: string;
   sales_status: SalesStatus;
   sales_assignee_id: string | null;
   sales_assignee_name: string | null;
