@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { ContactsSkeleton } from "@/components/dashboard/tab-content-skeleton";
 import { getAllTags, getContacts } from "@/actions/contact-actions";
 
 const ContactsContent = dynamic(
@@ -11,7 +11,7 @@ const ContactsContent = dynamic(
       (mod) => mod.ContactsContent
     ),
   {
-    loading: () => <TabContentSkeleton />,
+    loading: () => <ContactsSkeleton />,
   }
 );
 
@@ -22,7 +22,7 @@ export default async function ContactsPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <Suspense fallback={<TabContentSkeleton />}>
+        <Suspense fallback={<ContactsSkeleton />}>
           <ContactsContentWithData />
         </Suspense>
       </div>

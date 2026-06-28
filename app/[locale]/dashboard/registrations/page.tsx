@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { RegistrationsSkeleton } from "@/components/dashboard/tab-content-skeleton";
 import { getRegistrations } from "@/actions/registration-actions";
 
 const RegistrationsContent = dynamic(
@@ -11,7 +11,7 @@ const RegistrationsContent = dynamic(
       (mod) => mod.RegistrationsContent
     ),
   {
-    loading: () => <TabContentSkeleton />,
+    loading: () => <RegistrationsSkeleton />,
   }
 );
 
@@ -22,7 +22,7 @@ export default async function RegistrationsPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <Suspense fallback={<TabContentSkeleton />}>
+        <Suspense fallback={<RegistrationsSkeleton />}>
           <RegistrationsContentWithData />
         </Suspense>
       </div>

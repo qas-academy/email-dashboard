@@ -1,12 +1,12 @@
 import {
   DashboardRouteSkeleton,
-  EmailSenderSkeleton,
+  UsersManagementSkeleton,
 } from "@/components/dashboard/tab-content-skeleton";
 
-export default function EmailSenderLoading() {
+export default function UsersLoading() {
   return (
     <DashboardRouteSkeleton titleWidth="w-44">
-      <EmailSenderSkeleton />
+      <UsersManagementSkeleton />
     </DashboardRouteSkeleton>
   );
 }

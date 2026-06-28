@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { UsersManagementSkeleton } from "@/components/dashboard/tab-content-skeleton";
 import {
   getAllRolePermissions,
   getAllUsers,
@@ -15,7 +15,7 @@ const UsersContent = dynamic(
       (mod) => mod.UsersContent
     ),
   {
-    loading: () => <TabContentSkeleton />,
+    loading: () => <UsersManagementSkeleton />,
   }
 );
 
@@ -26,7 +26,7 @@ export default async function UsersPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <Suspense fallback={<TabContentSkeleton />}>
+        <Suspense fallback={<UsersManagementSkeleton />}>
           <UsersContentWithData />
         </Suspense>
       </div>

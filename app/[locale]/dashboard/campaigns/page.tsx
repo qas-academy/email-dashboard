@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { CampaignsSkeleton } from "@/components/dashboard/tab-content-skeleton";
 import { getCampaigns } from "@/actions/campaign-actions";
 
 const CampaignsContent = dynamic(
@@ -11,7 +11,7 @@ const CampaignsContent = dynamic(
       (mod) => mod.CampaignsContent
     ),
   {
-    loading: () => <TabContentSkeleton />,
+    loading: () => <CampaignsSkeleton />,
   }
 );
 
@@ -22,7 +22,7 @@ export default async function CampaignsPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <Suspense fallback={<TabContentSkeleton />}>
+        <Suspense fallback={<CampaignsSkeleton />}>
           <CampaignsContentWithData />
         </Suspense>
       </div>

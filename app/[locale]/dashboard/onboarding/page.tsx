@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { OnboardingSkeleton } from "@/components/dashboard/tab-content-skeleton";
 import {
   getDistinctSenders,
   getOnboardingStats,
@@ -16,7 +16,7 @@ const OnboardingContent = dynamic(
       (mod) => mod.OnboardingContent
     ),
   {
-    loading: () => <TabContentSkeleton />,
+    loading: () => <OnboardingSkeleton />,
   }
 );
 
@@ -27,7 +27,7 @@ export default async function OnboardingPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <Suspense fallback={<TabContentSkeleton />}>
+        <Suspense fallback={<OnboardingSkeleton />}>
           <OnboardingContentWithData />
         </Suspense>
       </div>
