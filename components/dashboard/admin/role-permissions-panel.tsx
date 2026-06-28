@@ -148,15 +148,12 @@ export function RolePermissionsPanel({ permissions, onUpdate, loading }: RolePer
         </Card>
       ))}
 
-      {/* Super Admin Info */}
-      <Card className="md:col-span-2 bg-purple-500/10 border-purple-500/30">
-        <CardContent className="py-4">
-          <div className="flex items-center gap-3 text-purple-400">
-            <Shield className="w-5 h-5" />
-            <span className="font-medium">{t("superAdminNote")}</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="md:col-span-2">
+        <div className="inline-flex max-w-full items-start gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-sm font-medium leading-5 text-purple-600 dark:text-purple-300">
+          <Shield className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{t("superAdminNote")}</span>
+        </div>
+      </div>
     </div>
   );
 }
