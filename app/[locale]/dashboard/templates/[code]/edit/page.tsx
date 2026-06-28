@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TemplateForm } from "@/components/dashboard/templates";
+import { TemplateForm } from "@/components/dashboard/templates/template-form";
 import { getTemplateByCode } from "@/actions/template-actions";
 
 interface EditTemplatePageProps {

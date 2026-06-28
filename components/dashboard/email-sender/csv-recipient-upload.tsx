@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle, Loader2, X, Users } from "lucide-react";
-import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,33 +42,35 @@ export function CSVRecipientUpload({ onRecipientsLoaded }: CSVRecipientUploadPro
 
   const parseCSVFile = (file: File): Promise<CSVRecipient[]> => {
     return new Promise((resolve, reject) => {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          const data = results.data as Record<string, string>[];
-          const mappedData: CSVRecipient[] = data
-            .map((row) => {
-              const email = row["email"] || row["Email"] || row["EMAIL"] || "";
-              const name = row["name"] || row["Name"] || row["NAME"] || "";
-              const firstName = row["first_name"] || row["First Name"] || row["firstName"] || "";
-              const lastName = row["last_name"] || row["Last Name"] || row["lastName"] || "";
+      import("papaparse").then(({ default: Papa }) => {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const data = results.data as Record<string, string>[];
+            const mappedData: CSVRecipient[] = data
+              .map((row) => {
+                const email = row["email"] || row["Email"] || row["EMAIL"] || "";
+                const name = row["name"] || row["Name"] || row["NAME"] || "";
+                const firstName = row["first_name"] || row["First Name"] || row["firstName"] || "";
+                const lastName = row["last_name"] || row["Last Name"] || row["lastName"] || "";
 
-              return {
-                email: email.trim().toLowerCase(),
-                name: name.trim(),
-                first_name: firstName.trim(),
-                last_name: lastName.trim(),
-              };
-            })
-            .filter((row) => row.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email));
+                return {
+                  email: email.trim().toLowerCase(),
+                  name: name.trim(),
+                  first_name: firstName.trim(),
+                  last_name: lastName.trim(),
+                };
+              })
+              .filter((row) => row.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email));
 
-          resolve(mappedData);
-        },
-        error: (error) => {
-          reject(error);
-        },
-      });
+            resolve(mappedData);
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
+      }).catch(reject);
     });
   };
 

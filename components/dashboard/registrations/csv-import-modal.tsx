@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, AlertCircle, CheckCircle, FileSpreadsheet, Loader2 } from "lucide-react";
-import Papa from "papaparse";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -53,41 +52,43 @@ export function CSVImportModal({ isOpen, onClose, onSuccess }: CSVImportModalPro
 
   const parseCSVFile = (file: File) => {
     return new Promise<CSVRegistration[]>((resolve, reject) => {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          const data = results.data as Record<string, string>[];
-          const mappedData: CSVRegistration[] = data.map((row) => ({
-            first_name: row["first_name"] || row["First Name"] || "",
-            last_name: row["last_name"] || row["Last Name"] || "",
-            email: row["email"] || row["Email"] || "",
-            phone: row["phone"] || row["Phone"] || undefined,
-            course: row["course"] || row["Course"] || undefined,
-            sat_score: row["sat_score"] || row["SAT Score"]
-              ? Number(row["sat_score"] || row["SAT Score"])
-              : undefined,
-            birth_year: row["birth_year"] || row["Birth Year"]
-              ? Number(row["birth_year"] || row["Birth Year"])
-              : undefined,
-            facebook_link: row["facebook_link"] || row["Facebook Link"] || undefined,
-            discovery_source: row["discovery_source"] || row["Discovery Source"] || undefined,
-            test_date: row["test_date"] || row["Test Date"] || undefined,
-            target_score: row["target_score"] || row["Target Score"]
-              ? Number(row["target_score"] || row["Target Score"])
-              : undefined,
-            sat_test_status: (row["sat_test_status"] || row["SAT Test Status"] || undefined) as CSVRegistration["sat_test_status"],
-            priority_level: row["priority_level"] || row["Priority Level"]
-              ? Number(row["priority_level"] || row["Priority Level"])
-              : undefined,
-            engagement_pool: (row["engagement_pool"] || row["Engagement Pool"] || undefined) as EngagementPool | undefined,
-          }));
-          resolve(mappedData);
-        },
-        error: (error) => {
-          reject(error);
-        },
-      });
+      import("papaparse").then(({ default: Papa }) => {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const data = results.data as Record<string, string>[];
+            const mappedData: CSVRegistration[] = data.map((row) => ({
+              first_name: row["first_name"] || row["First Name"] || "",
+              last_name: row["last_name"] || row["Last Name"] || "",
+              email: row["email"] || row["Email"] || "",
+              phone: row["phone"] || row["Phone"] || undefined,
+              course: row["course"] || row["Course"] || undefined,
+              sat_score: row["sat_score"] || row["SAT Score"]
+                ? Number(row["sat_score"] || row["SAT Score"])
+                : undefined,
+              birth_year: row["birth_year"] || row["Birth Year"]
+                ? Number(row["birth_year"] || row["Birth Year"])
+                : undefined,
+              facebook_link: row["facebook_link"] || row["Facebook Link"] || undefined,
+              discovery_source: row["discovery_source"] || row["Discovery Source"] || undefined,
+              test_date: row["test_date"] || row["Test Date"] || undefined,
+              target_score: row["target_score"] || row["Target Score"]
+                ? Number(row["target_score"] || row["Target Score"])
+                : undefined,
+              sat_test_status: (row["sat_test_status"] || row["SAT Test Status"] || undefined) as CSVRegistration["sat_test_status"],
+              priority_level: row["priority_level"] || row["Priority Level"]
+                ? Number(row["priority_level"] || row["Priority Level"])
+                : undefined,
+              engagement_pool: (row["engagement_pool"] || row["Engagement Pool"] || undefined) as EngagementPool | undefined,
+            }));
+            resolve(mappedData);
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
+      }).catch(reject);
     });
   };
 

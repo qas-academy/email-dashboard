@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Download, Loader2 } from "lucide-react";
-import Papa from "papaparse";
 import { Button } from "@/components/ui/button";
 import { exportRegistrations } from "@/actions/registration-actions";
 import { RegistrationFilters } from "@/lib/types";
@@ -37,6 +36,7 @@ export function CSVExportButton({ filters }: CSVExportButtonProps) {
       }));
 
       // Generate CSV
+      const { default: Papa } = await import("papaparse");
       const csv = Papa.unparse(csvData);
 
       // Create and download file

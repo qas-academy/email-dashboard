@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { StatsGrid } from "@/components/dashboard/stats-grid";
@@ -6,6 +7,7 @@ import { PriorityDonutChart } from "@/components/dashboard/charts/priority-donut
 import { PoolBarChart } from "@/components/dashboard/charts/pool-bar-chart";
 import { EmailActionChart } from "@/components/dashboard/charts/email-action-chart";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { DashboardOverviewSkeleton } from "@/components/dashboard/tab-content-skeleton";
 import {
   getDashboardStats,
   getRegistrationTrends,
@@ -16,6 +18,22 @@ import {
 } from "@/actions/dashboard-actions";
 
 export default async function DashboardPage() {
+  const t = await getTranslations("dashboard");
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header title={t("title")} />
+
+      <div className="p-6">
+        <Suspense fallback={<DashboardOverviewSkeleton />}>
+          <DashboardOverview />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+async function DashboardOverview() {
   const t = await getTranslations("dashboard");
   const locale = await getLocale();
 
@@ -46,10 +64,7 @@ export default async function DashboardPage() {
   const emailActionData = results[5].status === "fulfilled" ? results[5].value : [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header title={t("title")} />
-
-      <div className="p-6 space-y-6">
+    <div className="space-y-6">
         {/* Stats Grid */}
         <StatsGrid
           stats={stats}
@@ -93,7 +108,6 @@ export default async function DashboardPage() {
             <EmailActionChart data={emailActionData} title={t("emailActions")} emptyMessage={t("noData")} />
           </div>
         </div>
-      </div>
     </div>
   );
 }

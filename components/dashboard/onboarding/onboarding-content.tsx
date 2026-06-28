@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, GraduationCap, Clock, CheckCircle, AlertCircle } from "lucide-react";
@@ -10,12 +11,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { OnboardingFilters } from "./onboarding-filters";
 import { OnboardingTable } from "./onboarding-table";
-import { AddStudentModal } from "./add-student-modal";
-import { SendConfirmModal } from "./send-confirm-modal";
-import { EmailPreviewModal } from "./email-preview-modal";
 import { BulkSendBar } from "./bulk-send-bar";
-import { EditStudentModal } from "./edit-student-modal";
-import { StudentDetailsModal } from "./student-details-modal";
 import {
   getOnboardingStudents,
   getOnboardingStats,
@@ -36,6 +32,41 @@ import type {
 } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
+const AddStudentModal = dynamic(
+  () => import("./add-student-modal").then((mod) => mod.AddStudentModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+const SendConfirmModal = dynamic(
+  () => import("./send-confirm-modal").then((mod) => mod.SendConfirmModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+const EmailPreviewModal = dynamic(
+  () => import("./email-preview-modal").then((mod) => mod.EmailPreviewModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+const EditStudentModal = dynamic(
+  () => import("./edit-student-modal").then((mod) => mod.EditStudentModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+const StudentDetailsModal = dynamic(
+  () => import("./student-details-modal").then((mod) => mod.StudentDetailsModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
 
 export function OnboardingContent() {
   const t = useTranslations("onboarding");
@@ -424,30 +455,35 @@ export function OnboardingContent() {
         onClear={() => setSelectedIds(new Set())}
       />
 
-      {/* Modals */}
-      <AddStudentModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={fetchData}
-      />
+      {isAddModalOpen && (
+        <AddStudentModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={fetchData}
+        />
+      )}
 
-      <SendConfirmModal
-        isOpen={isSendModalOpen}
-        onClose={() => { setIsSendModalOpen(false); setSendTarget(null); }}
-        onConfirm={handleConfirmSend}
-        student={sendTarget}
-        isSending={isSending}
-        progress={sendProgress}
-      />
+      {isSendModalOpen && (
+        <SendConfirmModal
+          isOpen={isSendModalOpen}
+          onClose={() => { setIsSendModalOpen(false); setSendTarget(null); }}
+          onConfirm={handleConfirmSend}
+          student={sendTarget}
+          isSending={isSending}
+          progress={sendProgress}
+        />
+      )}
 
-      <SendConfirmModal
-        isOpen={isBulkSendModalOpen}
-        onClose={() => { setIsBulkSendModalOpen(false); setPendingBulkIds([]); }}
-        onConfirm={handleConfirmBulkSend}
-        bulkCount={pendingBulkIds.length}
-        isSending={isSending}
-        progress={sendProgress}
-      />
+      {isBulkSendModalOpen && (
+        <SendConfirmModal
+          isOpen={isBulkSendModalOpen}
+          onClose={() => { setIsBulkSendModalOpen(false); setPendingBulkIds([]); }}
+          onConfirm={handleConfirmBulkSend}
+          bulkCount={pendingBulkIds.length}
+          isSending={isSending}
+          progress={sendProgress}
+        />
+      )}
 
       {/* Skipped students warning modal */}
       <Modal
@@ -487,26 +523,32 @@ export function OnboardingContent() {
         </div>
       </Modal>
 
-      <EmailPreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => { setIsPreviewOpen(false); setPreviewHtml(null); }}
-        html={previewHtml}
-        studentName={previewStudentName}
-      />
+      {isPreviewOpen && (
+        <EmailPreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => { setIsPreviewOpen(false); setPreviewHtml(null); }}
+          html={previewHtml}
+          studentName={previewStudentName}
+        />
+      )}
 
-      <EditStudentModal
-        isOpen={isEditModalOpen}
-        onClose={() => { setIsEditModalOpen(false); setEditTarget(null); }}
-        onSuccess={fetchData}
-        student={editTarget}
-      />
+      {isEditModalOpen && (
+        <EditStudentModal
+          isOpen={isEditModalOpen}
+          onClose={() => { setIsEditModalOpen(false); setEditTarget(null); }}
+          onSuccess={fetchData}
+          student={editTarget}
+        />
+      )}
 
-      <StudentDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => { setIsDetailsModalOpen(false); setDetailsTarget(null); }}
-        student={detailsTarget}
-        senderInfo={detailsTarget?.sent_by ? senders.find((s) => s.sentBy === detailsTarget.sent_by) : undefined}
-      />
+      {isDetailsModalOpen && (
+        <StudentDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => { setIsDetailsModalOpen(false); setDetailsTarget(null); }}
+          student={detailsTarget}
+          senderInfo={detailsTarget?.sent_by ? senders.find((s) => s.sentBy === detailsTarget.sent_by) : undefined}
+        />
+      )}
     </div>
   );
 }

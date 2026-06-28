@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Users, UserPlus } from "lucide-react";
@@ -8,8 +9,6 @@ import { Pagination } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ContactFilters } from "./contact-filters";
 import { ContactsTable } from "./contacts-table";
-import { CSVImportModal } from "./csv-import-modal";
-import { AddContactModal } from "./add-contact-modal";
 import { getContacts, getAllTags } from "@/actions/contact-actions";
 import {
   MarketingContact,
@@ -18,6 +17,20 @@ import {
 } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
+const CSVImportModal = dynamic(
+  () => import("./csv-import-modal").then((mod) => mod.CSVImportModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+const AddContactModal = dynamic(
+  () => import("./add-contact-modal").then((mod) => mod.AddContactModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
 
 export function ContactsContent() {
   const t = useTranslations("contacts");
@@ -177,20 +190,22 @@ export function ContactsContent() {
         />
       )}
 
-      {/* Import Modal */}
-      <CSVImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSuccess={handleImportSuccess}
-      />
+      {isImportModalOpen && (
+        <CSVImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={handleImportSuccess}
+        />
+      )}
 
-      {/* Add Contact Modal */}
-      <AddContactModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={handleAddSuccess}
-        availableTags={availableTags}
-      />
+      {isAddModalOpen && (
+        <AddContactModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={handleAddSuccess}
+          availableTags={availableTags}
+        />
+      )}
     </div>
   );
 }

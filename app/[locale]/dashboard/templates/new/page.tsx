@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { TemplateForm } from "@/components/dashboard/templates";
+import { TemplateForm } from "@/components/dashboard/templates/template-form";
 
 export default async function NewTemplatePage() {
   const t = await getTranslations("templates");

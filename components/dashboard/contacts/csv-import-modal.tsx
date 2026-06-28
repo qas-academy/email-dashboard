@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, AlertCircle, CheckCircle, FileSpreadsheet, Loader2, Info } from "lucide-react";
-import Papa from "papaparse";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -64,23 +63,25 @@ export function CSVImportModal({ isOpen, onClose, onSuccess }: CSVImportModalPro
 
   const parseCSVFile = (file: File) => {
     return new Promise<CSVContact[]>((resolve, reject) => {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          const data = results.data as Record<string, string>[];
-          const mappedData: CSVContact[] = data.map((row) => ({
-            email: row["email"] || row["Email"] || "",
-            first_name: row["first_name"] || row["First Name"] || undefined,
-            last_name: row["last_name"] || row["Last Name"] || undefined,
-            tags: row["tags"] || row["Tags"] || undefined,
-          }));
-          resolve(mappedData);
-        },
-        error: (error) => {
-          reject(error);
-        },
-      });
+      import("papaparse").then(({ default: Papa }) => {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const data = results.data as Record<string, string>[];
+            const mappedData: CSVContact[] = data.map((row) => ({
+              email: row["email"] || row["Email"] || "",
+              first_name: row["first_name"] || row["First Name"] || undefined,
+              last_name: row["last_name"] || row["Last Name"] || undefined,
+              tags: row["tags"] || row["Tags"] || undefined,
+            }));
+            resolve(mappedData);
+          },
+          error: (error) => {
+            reject(error);
+          },
+        });
+      }).catch(reject);
     });
   };
 

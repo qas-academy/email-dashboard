@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { ArrowLeft, Edit } from "lucide-react";
 import { Header } from "@/components/layout";
 import { Button } from "@/components/ui";
-import { HtmlPreview } from "@/components/dashboard/templates";
+import { HtmlPreview } from "@/components/dashboard/templates/html-preview";
 import { getTemplateByCode } from "@/actions/template-actions";
 
 interface TemplateDetailPageProps {

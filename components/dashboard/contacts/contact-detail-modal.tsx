@@ -23,18 +23,34 @@ export function ContactDetailModal({
 }: ContactDetailModalProps) {
   const t = useTranslations("contacts");
   const locale = useLocale();
-  const [history, setHistory] = useState<ContactEvent[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyState, setHistoryState] = useState<{
+    contactId: string | null;
+    events: ContactEvent[];
+  }>({
+    contactId: null,
+    events: [],
+  });
+  const contactId = contact?.id ?? null;
 
   useEffect(() => {
-    if (contact && isOpen) {
-      setIsLoadingHistory(true);
-      getContactHistory(contact.id)
-        .then(setHistory)
-        .catch(console.error)
-        .finally(() => setIsLoadingHistory(false));
+    if (!contactId || !isOpen) {
+      return;
     }
-  }, [contact, isOpen]);
+
+    let isCurrent = true;
+
+    getContactHistory(contactId)
+      .then((events) => {
+        if (isCurrent) {
+          setHistoryState({ contactId, events });
+        }
+      })
+      .catch(console.error);
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [contactId, isOpen]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
@@ -48,6 +64,9 @@ export function ContactDetailModal({
   };
 
   if (!contact) return null;
+
+  const history = historyState.contactId === contact.id ? historyState.events : [];
+  const isLoadingHistory = isOpen && historyState.contactId !== contact.id;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t("contactDetails")} size="lg">

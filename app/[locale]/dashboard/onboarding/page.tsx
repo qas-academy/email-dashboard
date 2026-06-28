@@ -1,6 +1,17 @@
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
-import { OnboardingContent } from "@/components/dashboard/onboarding";
+import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+
+const OnboardingContent = dynamic(
+  () =>
+    import("@/components/dashboard/onboarding/onboarding-content").then(
+      (mod) => mod.OnboardingContent
+    ),
+  {
+    loading: () => <TabContentSkeleton />,
+  }
+);
 
 export default async function OnboardingPage() {
   const t = await getTranslations("onboarding");

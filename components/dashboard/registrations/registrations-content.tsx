@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Users } from "lucide-react";
@@ -9,7 +10,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RegistrationFilters } from "./registration-filters";
 import { RegistrationsTable } from "./registrations-table";
 import { CSVExportButton } from "./csv-export-button";
-import { CSVImportModal } from "./csv-import-modal";
 import { getRegistrations } from "@/actions/registration-actions";
 import {
   Registration,
@@ -18,6 +18,13 @@ import {
 } from "@/lib/types";
 
 const ITEMS_PER_PAGE = 10;
+const CSVImportModal = dynamic(
+  () => import("./csv-import-modal").then((mod) => mod.CSVImportModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
 
 export function RegistrationsContent() {
   const t = useTranslations("registrations");
@@ -142,12 +149,13 @@ export function RegistrationsContent() {
         />
       )}
 
-      {/* Import Modal */}
-      <CSVImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSuccess={handleImportSuccess}
-      />
+      {isImportModalOpen && (
+        <CSVImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={handleImportSuccess}
+        />
+      )}
     </div>
   );
 }

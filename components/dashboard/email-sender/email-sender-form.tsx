@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useTransition, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Send } from "lucide-react";
@@ -13,8 +14,6 @@ import { saveCustomTemplate, updateTemplate } from "@/actions/template-actions";
 import { TemplateSelector } from "./template-selector";
 import { EmailPreviewPanel } from "./email-preview-panel";
 import { InfoBox } from "./info-box";
-import { SendResultModal } from "./send-result-modal";
-import { SaveTemplateModal } from "./save-template-modal";
 import { CSVRecipientUpload } from "./csv-recipient-upload";
 import {
   DEFAULT_EMAIL_SENDER_FROM,
@@ -26,6 +25,21 @@ import type { EmailTemplate, EmailFormData, BatchEmailResult } from "@/lib/types
 interface EmailSenderFormProps {
   templates: EmailTemplate[];
 }
+
+const SendResultModal = dynamic(
+  () => import("./send-result-modal").then((mod) => mod.SendResultModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
+const SaveTemplateModal = dynamic(
+  () => import("./save-template-modal").then((mod) => mod.SaveTemplateModal),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+);
 
 // Store original template values to detect modifications
 interface OriginalTemplateValues {
@@ -395,25 +409,27 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
       {/* Info Box */}
       <InfoBox />
 
-      {/* Result Modal */}
-      <SendResultModal
-        isOpen={showResultModal}
-        onClose={() => setShowResultModal(false)}
-        result={sendResult}
-      />
+      {showResultModal && (
+        <SendResultModal
+          isOpen={showResultModal}
+          onClose={() => setShowResultModal(false)}
+          result={sendResult}
+        />
+      )}
 
-      {/* Save Template Modal */}
-      <SaveTemplateModal
-        isOpen={showSaveTemplateModal}
-        onClose={() => {
-          setShowSaveTemplateModal(false);
-          clearForm(); // Clear form when user skips saving
-        }}
-        templateCode={pendingFormDataRef.current?.templateCode || ""}
-        onUpdateExisting={handleUpdateExisting}
-        onSaveAsNew={handleSaveAsNew}
-        isPending={isSaving}
-      />
+      {showSaveTemplateModal && (
+        <SaveTemplateModal
+          isOpen={showSaveTemplateModal}
+          onClose={() => {
+            setShowSaveTemplateModal(false);
+            clearForm(); // Clear form when user skips saving
+          }}
+          templateCode={pendingFormDataRef.current?.templateCode || ""}
+          onUpdateExisting={handleUpdateExisting}
+          onSaveAsNew={handleSaveAsNew}
+          isPending={isSaving}
+        />
+      )}
     </div>
   );
 }
