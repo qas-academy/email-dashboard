@@ -21,7 +21,6 @@
     "templates": "Mẫu Email",
     "emailSender": "Gửi Email",
     "registrations": "Đăng ký",
-    "sales": "Sales",
     "contacts": "Danh bạ",
     "campaigns": "Chiến dịch",
     "campaignMetrics": "Thống kê chiến dịch",
@@ -224,9 +223,6 @@
       "yes": "Có",
       "no": "Không"
     }
-  },
-  "sales": {
-    "title": "Sales"
   },
   "dashboard": {
     "title": "Tổng quan",

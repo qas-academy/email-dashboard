@@ -13,7 +13,6 @@ const ROUTE_PAGE_MAP: Record<string, DashboardPage> = {
   '/dashboard/templates': 'templates',
   '/dashboard/email-sender': 'email-sender',
   '/dashboard/registrations': 'registrations',
-  '/dashboard/sales': 'registrations',
   '/dashboard/contacts': 'contacts',
   '/dashboard/campaigns': 'campaigns',
   '/dashboard/admin/users': 'user-management',
