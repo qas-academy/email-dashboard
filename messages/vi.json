@@ -264,6 +264,8 @@
     "plainTextPlaceholder": "Xin chào '{{name}}'! Email của bạn là: '{{email}}'",
     "selectTemplate": "Chọn Mẫu",
     "noTemplate": "-- Không dùng mẫu (tạo mới) --",
+    "loadingTemplate": "Đang tải mẫu...",
+    "templateLoadError": "Không thể tải mẫu",
     "sendEmail": "Gửi Email",
     "sending": "Đang gửi...",
     "variablesHint": "Sử dụng '{{email}}' và '{{name}}' để cá nhân hóa",

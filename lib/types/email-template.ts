@@ -5,6 +5,8 @@ export interface EmailTemplate {
   description: string | null;
 }
 
+export type EmailTemplateSummary = Omit<EmailTemplate, "html_content">;
+
 export interface EmailTemplateFormData {
   template_code: string;
   subject: string;

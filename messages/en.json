@@ -264,6 +264,8 @@
     "plainTextPlaceholder": "Hello '{{name}}'! Your email is: '{{email}}'",
     "selectTemplate": "Select Template",
     "noTemplate": "-- No template (create new) --",
+    "loadingTemplate": "Loading template...",
+    "templateLoadError": "Failed to load template",
     "sendEmail": "Send Email",
     "sending": "Sending...",
     "variablesHint": "Use '{{email}}' and '{{name}}' for personalization",

@@ -27,14 +27,14 @@ import {
   updateCampaign,
   getAudiencePreview,
 } from "@/actions/campaign-actions";
-import { getTemplates } from "@/actions/template-actions";
+import { getTemplateSummaries } from "@/actions/template-actions";
 import { getAllTags } from "@/actions/contact-actions";
 import type {
   Campaign,
   CampaignCreateInput,
   AudienceFilter,
   AudiencePreview,
-  EmailTemplate,
+  EmailTemplateSummary,
 } from "@/lib/types";
 
 interface CampaignWizardProps {
@@ -73,7 +73,7 @@ export function CampaignWizard({ campaign, mode }: CampaignWizardProps) {
   const [scheduledAt, setScheduledAt] = useState(campaign?.scheduled_at || "");
 
   // Data for selections
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [templates, setTemplates] = useState<EmailTemplateSummary[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [audiencePreview, setAudiencePreview] = useState<AudiencePreview | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -82,7 +82,7 @@ export function CampaignWizard({ campaign, mode }: CampaignWizardProps) {
   useEffect(() => {
     async function loadData() {
       const [templatesData, tagsData] = await Promise.all([
-        getTemplates(),
+        getTemplateSummaries(),
         getAllTags(),
       ]);
       setTemplates(templatesData);

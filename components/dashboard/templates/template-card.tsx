@@ -7,10 +7,10 @@ import { Link } from "@/i18n/navigation";
 import { Eye, Edit, Trash2, MoreVertical } from "lucide-react";
 import { Button, ConfirmDialog } from "@/components/ui";
 import { deleteTemplate } from "@/actions/template-actions";
-import { EmailTemplate } from "@/lib/types";
+import type { EmailTemplateSummary } from "@/lib/types";
 
 interface TemplateCardProps {
-  template: EmailTemplate;
+  template: EmailTemplateSummary;
 }
 
 export function TemplateCard({ template }: TemplateCardProps) {

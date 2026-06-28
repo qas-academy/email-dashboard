@@ -1,7 +1,14 @@
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import {
+  getDistinctSenders,
+  getOnboardingStats,
+  getOnboardingStudents,
+} from "@/actions/onboarding-actions";
+import { getCurrentUser } from "@/actions/rbac-actions";
 
 const OnboardingContent = dynamic(
   () =>
@@ -20,8 +27,28 @@ export default async function OnboardingPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <OnboardingContent />
+        <Suspense fallback={<TabContentSkeleton />}>
+          <OnboardingContentWithData />
+        </Suspense>
       </div>
     </div>
+  );
+}
+
+async function OnboardingContentWithData() {
+  const [initialStudents, initialStats, initialSenders, currentUser] = await Promise.all([
+    getOnboardingStudents({}, { page: 1, limit: 10 }),
+    getOnboardingStats(),
+    getDistinctSenders(),
+    getCurrentUser(),
+  ]);
+
+  return (
+    <OnboardingContent
+      initialStudents={initialStudents}
+      initialStats={initialStats}
+      initialSenders={initialSenders}
+      initialCurrentUserName={currentUser?.email}
+    />
   );
 }

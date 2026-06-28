@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Users, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
@@ -11,21 +11,43 @@ import type { AppUser, UserRole, DashboardPage } from "@/lib/types";
 
 type RoleFilter = 'all' | NonNullable<UserRole> | 'pending';
 
-export function UsersContent() {
+const defaultRolePermissions: Record<NonNullable<UserRole>, DashboardPage[]> = {
+  super_admin: [],
+  admin: [],
+  internal: [],
+  sales: [],
+};
+
+interface UsersContentProps {
+  initialUsers?: AppUser[];
+  initialRolePermissions?: Record<NonNullable<UserRole>, DashboardPage[]>;
+  initialCurrentUserId?: string;
+}
+
+export function UsersContent({
+  initialUsers,
+  initialRolePermissions,
+  initialCurrentUserId,
+}: UsersContentProps) {
   const t = useTranslations("admin");
-  const [users, setUsers] = useState<AppUser[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
-  const [rolePermissions, setRolePermissions] = useState<Record<NonNullable<UserRole>, DashboardPage[]>>({
-    super_admin: [],
-    admin: [],
-    internal: [],
-    sales: [],
-  });
-  const [loading, setLoading] = useState(true);
+  const skipInitialLoadRef = useRef(
+    initialUsers !== undefined && initialRolePermissions !== undefined
+  );
+  const [users, setUsers] = useState<AppUser[]>(initialUsers ?? []);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(initialCurrentUserId);
+  const [rolePermissions, setRolePermissions] = useState<Record<NonNullable<UserRole>, DashboardPage[]>>(
+    initialRolePermissions ?? defaultRolePermissions
+  );
+  const [loading, setLoading] = useState(!skipInitialLoadRef.current);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [activeTab, setActiveTab] = useState<'users' | 'permissions'>('users');
 
   useEffect(() => {
+    if (skipInitialLoadRef.current) {
+      skipInitialLoadRef.current = false;
+      return;
+    }
+
     loadData();
   }, []);
 

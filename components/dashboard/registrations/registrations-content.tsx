@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,19 +26,28 @@ const CSVImportModal = dynamic(
   }
 );
 
-export function RegistrationsContent() {
-  const t = useTranslations("registrations");
+interface RegistrationsContentProps {
+  initialRegistrations?: PaginatedResult<Registration>;
+}
 
-  const [registrations, setRegistrations] = useState<PaginatedResult<Registration>>({
-    data: [],
-    total: 0,
-    page: 1,
-    limit: ITEMS_PER_PAGE,
-    totalPages: 0,
-  });
+const emptyRegistrations: PaginatedResult<Registration> = {
+  data: [],
+  total: 0,
+  page: 1,
+  limit: ITEMS_PER_PAGE,
+  totalPages: 0,
+};
+
+export function RegistrationsContent({ initialRegistrations }: RegistrationsContentProps) {
+  const t = useTranslations("registrations");
+  const skipInitialFetchRef = useRef(Boolean(initialRegistrations));
+
+  const [registrations, setRegistrations] = useState<PaginatedResult<Registration>>(
+    initialRegistrations ?? emptyRegistrations
+  );
   const [filters, setFilters] = useState<Filters>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialRegistrations);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const fetchRegistrations = useCallback(async () => {
@@ -57,6 +66,11 @@ export function RegistrationsContent() {
   }, [filters, currentPage]);
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      return;
+    }
+
     fetchRegistrations();
   }, [fetchRegistrations]);
 

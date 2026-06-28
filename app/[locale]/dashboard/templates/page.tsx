@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { TemplateList } from "@/components/dashboard/templates/template-list";
 import { TemplateGridSkeleton } from "@/components/dashboard/tab-content-skeleton";
-import { getTemplates } from "@/actions/template-actions";
+import { getTemplateSummaries } from "@/actions/template-actions";
 
 export default async function TemplatesPage() {
   const t = await getTranslations("templates");
@@ -21,7 +21,7 @@ export default async function TemplatesPage() {
 }
 
 async function TemplatesContent() {
-  const templates = await getTemplates();
+  const templates = await getTemplateSummaries();
 
   return <TemplateList templates={templates} />;
 }

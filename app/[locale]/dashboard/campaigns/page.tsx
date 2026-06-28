@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { getCampaigns } from "@/actions/campaign-actions";
 
 const CampaignsContent = dynamic(
   () =>
@@ -20,8 +22,16 @@ export default async function CampaignsPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <CampaignsContent />
+        <Suspense fallback={<TabContentSkeleton />}>
+          <CampaignsContentWithData />
+        </Suspense>
       </div>
     </div>
   );
+}
+
+async function CampaignsContentWithData() {
+  const initialCampaigns = await getCampaigns({}, { page: 1, limit: 10 });
+
+  return <CampaignsContent initialCampaigns={initialCampaigns} />;
 }

@@ -249,18 +249,19 @@ export async function getOnboardingStudents(
     const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : "created_at";
     const safeSortOrder = sortOrder === "asc" ? "ASC" : "DESC";
 
-    const countResult = await query(
-      `SELECT COUNT(*) FROM student_onboarding ${whereClause}`,
-      params
-    );
+    const [countResult, dataResult] = await Promise.all([
+      query(
+        `SELECT COUNT(*) FROM student_onboarding ${whereClause}`,
+        params
+      ),
+      query(
+        `SELECT * FROM student_onboarding ${whereClause}
+         ORDER BY "${safeSortBy}" ${safeSortOrder}
+         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+        [...params, limit, offset]
+      ),
+    ]);
     const total = parseInt(countResult.rows[0].count, 10);
-
-    const dataResult = await query(
-      `SELECT * FROM student_onboarding ${whereClause}
-       ORDER BY "${safeSortBy}" ${safeSortOrder}
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      [...params, limit, offset]
-    );
 
     return {
       data: dataResult.rows as StudentOnboarding[],

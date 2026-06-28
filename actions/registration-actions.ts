@@ -76,20 +76,19 @@ export async function getRegistrations(
     const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : "created_at";
     const safeSortOrder = sortOrder === "asc" ? "ASC" : "DESC";
 
-    // Get total count
-    const countResult = await query(
-      `SELECT COUNT(*) FROM qas_registrations ${whereClause}`,
-      params
-    );
+    const [countResult, dataResult] = await Promise.all([
+      query(
+        `SELECT COUNT(*) FROM qas_registrations ${whereClause}`,
+        params
+      ),
+      query(
+        `SELECT * FROM qas_registrations ${whereClause}
+         ORDER BY "${safeSortBy}" ${safeSortOrder}
+         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+        [...params, limit, offset]
+      ),
+    ]);
     const total = parseInt(countResult.rows[0].count, 10);
-
-    // Get paginated data - use quoted identifiers for defense-in-depth
-    const dataResult = await query(
-      `SELECT * FROM qas_registrations ${whereClause}
-       ORDER BY "${safeSortBy}" ${safeSortOrder}
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      [...params, limit, offset]
-    );
 
     return {
       data: dataResult.rows as Registration[],

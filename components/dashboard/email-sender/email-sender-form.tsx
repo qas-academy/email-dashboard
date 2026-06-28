@@ -10,20 +10,19 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { sendEmails } from "@/actions/email-actions";
-import { saveCustomTemplate, updateTemplate } from "@/actions/template-actions";
+import { getTemplateByCode, saveCustomTemplate, updateTemplate } from "@/actions/template-actions";
 import { TemplateSelector } from "./template-selector";
 import { EmailPreviewPanel } from "./email-preview-panel";
 import { InfoBox } from "./info-box";
 import { CSVRecipientUpload } from "./csv-recipient-upload";
 import {
-  DEFAULT_EMAIL_SENDER_FROM,
   QAS_CONTACT_FROM,
   QAS_SALES_FROM,
 } from "@/lib/email-addresses";
-import type { EmailTemplate, EmailFormData, BatchEmailResult } from "@/lib/types";
+import type { EmailTemplateSummary, EmailFormData, BatchEmailResult } from "@/lib/types";
 
 interface EmailSenderFormProps {
-  templates: EmailTemplate[];
+  templates: EmailTemplateSummary[];
 }
 
 const SendResultModal = dynamic(
@@ -51,6 +50,7 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
   const t = useTranslations("emailSender");
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
+  const [isTemplateLoading, setIsTemplateLoading] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [sendResult, setSendResult] = useState<BatchEmailResult | null>(null);
@@ -64,7 +64,7 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
 
   // Form state
   const [formData, setFormData] = useState<EmailFormData>({
-    from: DEFAULT_EMAIL_SENDER_FROM,
+    from: QAS_CONTACT_FROM,
     to: "",
     names: "",
     cc: "",
@@ -74,18 +74,35 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
     templateCode: null,
   });
 
-  const handleTemplateSelect = (template: EmailTemplate | null) => {
+  const handleTemplateSelect = async (template: EmailTemplateSummary | null) => {
     if (template) {
-      // Store original values for modification detection
-      originalTemplateRef.current = {
-        subject: template.subject,
-        htmlContent: template.html_content,
-      };
+      setIsTemplateLoading(true);
+      setError(null);
       setFormData((prev) => ({
         ...prev,
         templateCode: template.template_code,
         subject: template.subject,
-        htmlContent: template.html_content,
+        htmlContent: "",
+      }));
+
+      const fullTemplate = await getTemplateByCode(template.template_code);
+      setIsTemplateLoading(false);
+
+      if (!fullTemplate) {
+        setError(t("templateLoadError"));
+        return;
+      }
+
+      // Store original values for modification detection
+      originalTemplateRef.current = {
+        subject: fullTemplate.subject,
+        htmlContent: fullTemplate.html_content,
+      };
+      setFormData((prev) => ({
+        ...prev,
+        templateCode: fullTemplate.template_code,
+        subject: fullTemplate.subject,
+        htmlContent: fullTemplate.html_content,
       }));
     } else {
       originalTemplateRef.current = null;
@@ -267,7 +284,11 @@ export function EmailSenderForm({ templates }: EmailSenderFormProps) {
               templates={templates}
               selectedCode={formData.templateCode}
               onSelect={handleTemplateSelect}
+              disabled={isTemplateLoading}
             />
+            {isTemplateLoading && (
+              <p className="text-xs text-muted-foreground">{t("loadingTemplate")}</p>
+            )}
 
             {/* From */}
             <div className="space-y-1.5">

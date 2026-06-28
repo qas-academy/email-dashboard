@@ -234,13 +234,23 @@ export async function updateRolePermissions(
  * Get current user's allowed pages based on role
  */
 export async function getCurrentUserAllowedPages(): Promise<DashboardPage[]> {
-  const currentUser = await getCurrentUser();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!currentUser?.role) {
+  if (!user) {
     return [];
   }
 
-  return getRolePermissions(currentUser.role);
+  const result = await query<{ page: DashboardPage }>(
+    `SELECT rp.page
+     FROM app_users au
+     JOIN role_permissions rp ON rp.role = au.role
+     WHERE au.auth_user_id = $1
+       AND au.role IS NOT NULL`,
+    [user.id]
+  );
+
+  return result.rows.map((r) => r.page);
 }
 
 /**

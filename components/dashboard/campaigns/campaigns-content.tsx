@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Megaphone } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -18,20 +18,29 @@ import {
 
 const ITEMS_PER_PAGE = 10;
 
-export function CampaignsContent() {
+interface CampaignsContentProps {
+  initialCampaigns?: PaginatedResult<CampaignWithRates>;
+}
+
+const emptyCampaigns: PaginatedResult<CampaignWithRates> = {
+  data: [],
+  total: 0,
+  page: 1,
+  limit: ITEMS_PER_PAGE,
+  totalPages: 0,
+};
+
+export function CampaignsContent({ initialCampaigns }: CampaignsContentProps) {
   const t = useTranslations("campaigns");
   const router = useRouter();
+  const skipInitialFetchRef = useRef(Boolean(initialCampaigns));
 
-  const [campaigns, setCampaigns] = useState<PaginatedResult<CampaignWithRates>>({
-    data: [],
-    total: 0,
-    page: 1,
-    limit: ITEMS_PER_PAGE,
-    totalPages: 0,
-  });
+  const [campaigns, setCampaigns] = useState<PaginatedResult<CampaignWithRates>>(
+    initialCampaigns ?? emptyCampaigns
+  );
   const [filters, setFilters] = useState<Filters>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialCampaigns);
 
   const fetchCampaigns = useCallback(async () => {
     setIsLoading(true);
@@ -49,6 +58,11 @@ export function CampaignsContent() {
   }, [filters, currentPage]);
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      return;
+    }
+
     fetchCampaigns();
   }, [fetchCampaigns]);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Upload, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,22 +32,36 @@ const AddContactModal = dynamic(
   }
 );
 
-export function ContactsContent() {
-  const t = useTranslations("contacts");
+interface ContactsContentProps {
+  initialContacts?: PaginatedResult<MarketingContact>;
+  initialAvailableTags?: string[];
+}
 
-  const [contacts, setContacts] = useState<PaginatedResult<MarketingContact>>({
-    data: [],
-    total: 0,
-    page: 1,
-    limit: ITEMS_PER_PAGE,
-    totalPages: 0,
-  });
+const emptyContacts: PaginatedResult<MarketingContact> = {
+  data: [],
+  total: 0,
+  page: 1,
+  limit: ITEMS_PER_PAGE,
+  totalPages: 0,
+};
+
+export function ContactsContent({
+  initialContacts,
+  initialAvailableTags,
+}: ContactsContentProps) {
+  const t = useTranslations("contacts");
+  const skipInitialContactsFetchRef = useRef(Boolean(initialContacts));
+  const skipInitialTagsFetchRef = useRef(initialAvailableTags !== undefined);
+
+  const [contacts, setContacts] = useState<PaginatedResult<MarketingContact>>(
+    initialContacts ?? emptyContacts
+  );
   const [filters, setFilters] = useState<Filters>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialContacts);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>(initialAvailableTags ?? []);
 
   const fetchContacts = useCallback(async () => {
     setIsLoading(true);
@@ -74,10 +88,20 @@ export function ContactsContent() {
   }, []);
 
   useEffect(() => {
+    if (skipInitialContactsFetchRef.current) {
+      skipInitialContactsFetchRef.current = false;
+      return;
+    }
+
     fetchContacts();
   }, [fetchContacts]);
 
   useEffect(() => {
+    if (skipInitialTagsFetchRef.current) {
+      skipInitialTagsFetchRef.current = false;
+      return;
+    }
+
     fetchTags();
   }, [fetchTags]);
 

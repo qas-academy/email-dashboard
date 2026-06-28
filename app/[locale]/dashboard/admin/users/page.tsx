@@ -1,7 +1,13 @@
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import {
+  getAllRolePermissions,
+  getAllUsers,
+  getCurrentUser,
+} from "@/actions/rbac-actions";
 
 const UsersContent = dynamic(
   () =>
@@ -20,8 +26,26 @@ export default async function UsersPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <UsersContent />
+        <Suspense fallback={<TabContentSkeleton />}>
+          <UsersContentWithData />
+        </Suspense>
       </div>
     </div>
+  );
+}
+
+async function UsersContentWithData() {
+  const [initialUsers, initialRolePermissions, currentUser] = await Promise.all([
+    getAllUsers(),
+    getAllRolePermissions(),
+    getCurrentUser(),
+  ]);
+
+  return (
+    <UsersContent
+      initialUsers={initialUsers}
+      initialRolePermissions={initialRolePermissions}
+      initialCurrentUserId={currentUser?.auth_user_id}
+    />
   );
 }

@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { EmailSenderForm } from "@/components/dashboard/email-sender/email-sender-form";
 import { EmailSenderSkeleton } from "@/components/dashboard/tab-content-skeleton";
-import { getTemplates } from "@/actions/template-actions";
+import { getTemplateSummaries } from "@/actions/template-actions";
 
 export default async function EmailSenderPage() {
   const t = await getTranslations("emailSender");
@@ -21,7 +21,7 @@ export default async function EmailSenderPage() {
 }
 
 async function EmailSenderContent() {
-  const templates = await getTemplates();
+  const templates = await getTemplateSummaries();
 
   return <EmailSenderForm templates={templates} />;
 }

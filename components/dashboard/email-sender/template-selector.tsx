@@ -1,18 +1,20 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { EmailTemplate } from "@/lib/types";
+import type { EmailTemplateSummary } from "@/lib/types";
 
 interface TemplateSelectorProps {
-  templates: EmailTemplate[];
+  templates: EmailTemplateSummary[];
   selectedCode: string | null;
-  onSelect: (template: EmailTemplate | null) => void;
+  onSelect: (template: EmailTemplateSummary | null) => void | Promise<void>;
+  disabled?: boolean;
 }
 
 export function TemplateSelector({
   templates,
   selectedCode,
   onSelect,
+  disabled = false,
 }: TemplateSelectorProps) {
   const t = useTranslations("emailSender");
 
@@ -36,6 +38,7 @@ export function TemplateSelector({
       <select
         value={selectedCode || ""}
         onChange={handleChange}
+        disabled={disabled}
         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
       >
         <option value="">{t("noTemplate")}</option>

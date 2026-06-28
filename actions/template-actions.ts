@@ -2,7 +2,12 @@
 
 import { query } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { EmailTemplate, EmailTemplateCreateInput, EmailTemplateUpdateInput } from "@/lib/types";
+import {
+  EmailTemplate,
+  EmailTemplateCreateInput,
+  EmailTemplateSummary,
+  EmailTemplateUpdateInput,
+} from "@/lib/types";
 
 // Constants for template code generation
 const MIN_WORD_LENGTH = 3; // Minimum word length to include in template code
@@ -26,6 +31,26 @@ export async function getTemplates(search?: string): Promise<EmailTemplate[]> {
     return result.rows as EmailTemplate[];
   } catch (error) {
     console.error("Error fetching templates:", error);
+    return [];
+  }
+}
+
+export async function getTemplateSummaries(search?: string): Promise<EmailTemplateSummary[]> {
+  try {
+    let sql = "SELECT template_code, subject, description FROM email_templates";
+    const params: string[] = [];
+
+    if (search && search.trim()) {
+      sql += " WHERE template_code ILIKE $1 OR subject ILIKE $1 OR description ILIKE $1";
+      params.push(`%${search.trim()}%`);
+    }
+
+    sql += " ORDER BY template_code ASC";
+
+    const result = await query(sql, params);
+    return result.rows as EmailTemplateSummary[];
+  } catch (error) {
+    console.error("Error fetching template summaries:", error);
     return [];
   }
 }

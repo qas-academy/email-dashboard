@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { TabContentSkeleton } from "@/components/dashboard/tab-content-skeleton";
+import { getAllTags, getContacts } from "@/actions/contact-actions";
 
 const ContactsContent = dynamic(
   () =>
@@ -20,8 +22,24 @@ export default async function ContactsPage() {
     <div className="min-h-screen bg-background">
       <Header title={t("title")} />
       <div className="p-6">
-        <ContactsContent />
+        <Suspense fallback={<TabContentSkeleton />}>
+          <ContactsContentWithData />
+        </Suspense>
       </div>
     </div>
+  );
+}
+
+async function ContactsContentWithData() {
+  const [initialContacts, initialAvailableTags] = await Promise.all([
+    getContacts({}, { page: 1, limit: 10 }),
+    getAllTags(),
+  ]);
+
+  return (
+    <ContactsContent
+      initialContacts={initialContacts}
+      initialAvailableTags={initialAvailableTags}
+    />
   );
 }

@@ -67,20 +67,19 @@ export async function getCampaigns(
     const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : "created_at";
     const safeSortOrder = sortOrder === "asc" ? "ASC" : "DESC";
 
-    // Get total count
-    const countResult = await query(
-      `SELECT COUNT(*) FROM marketing_campaigns ${whereClause}`,
-      params
-    );
+    const [countResult, dataResult] = await Promise.all([
+      query(
+        `SELECT COUNT(*) FROM marketing_campaigns ${whereClause}`,
+        params
+      ),
+      query(
+        `SELECT * FROM marketing_campaigns ${whereClause}
+         ORDER BY "${safeSortBy}" ${safeSortOrder}
+         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+        [...params, limit, offset]
+      ),
+    ]);
     const total = parseInt(countResult.rows[0].count, 10);
-
-    // Get paginated data
-    const dataResult = await query(
-      `SELECT * FROM marketing_campaigns ${whereClause}
-       ORDER BY "${safeSortBy}" ${safeSortOrder}
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-      [...params, limit, offset]
-    );
 
     // Calculate rates for each campaign
     const campaignsWithRates: CampaignWithRates[] = dataResult.rows.map(row => {

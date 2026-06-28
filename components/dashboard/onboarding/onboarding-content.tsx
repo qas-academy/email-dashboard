@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, GraduationCap, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,23 +68,52 @@ const StudentDetailsModal = dynamic(
   }
 );
 
-export function OnboardingContent() {
+interface OnboardingContentProps {
+  initialStudents?: PaginatedResult<StudentOnboarding>;
+  initialStats?: OnboardingStats;
+  initialSenders?: SenderInfo[];
+  initialCurrentUserName?: string;
+}
+
+const emptyStudents: PaginatedResult<StudentOnboarding> = {
+  data: [],
+  total: 0,
+  page: 1,
+  limit: ITEMS_PER_PAGE,
+  totalPages: 0,
+};
+
+const emptyStats: OnboardingStats = {
+  total: 0,
+  pending: 0,
+  sent: 0,
+  failed: 0,
+};
+
+export function OnboardingContent({
+  initialStudents,
+  initialStats,
+  initialSenders,
+  initialCurrentUserName,
+}: OnboardingContentProps) {
   const t = useTranslations("onboarding");
+  const skipInitialDataFetchRef = useRef(
+    Boolean(initialStudents && initialStats && initialSenders !== undefined)
+  );
+  const skipInitialUserFetchRef = useRef(initialCurrentUserName !== undefined);
 
   // Data state
-  const [students, setStudents] = useState<PaginatedResult<StudentOnboarding>>({
-    data: [],
-    total: 0,
-    page: 1,
-    limit: ITEMS_PER_PAGE,
-    totalPages: 0,
-  });
-  const [stats, setStats] = useState<OnboardingStats>({ total: 0, pending: 0, sent: 0, failed: 0 });
+  const [students, setStudents] = useState<PaginatedResult<StudentOnboarding>>(
+    initialStudents ?? emptyStudents
+  );
+  const [stats, setStats] = useState<OnboardingStats>(initialStats ?? emptyStats);
   const [filters, setFilters] = useState<Filters>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [senders, setSenders] = useState<SenderInfo[]>([]);
-  const [currentUserName, setCurrentUserName] = useState<string>("admin@example.com");
+  const [isLoading, setIsLoading] = useState(!initialStudents);
+  const [senders, setSenders] = useState<SenderInfo[]>(initialSenders ?? []);
+  const [currentUserName, setCurrentUserName] = useState<string>(
+    initialCurrentUserName ?? "admin@example.com"
+  );
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -123,11 +152,21 @@ export function OnboardingContent() {
   }, [filters, currentPage]);
 
   useEffect(() => {
+    if (skipInitialDataFetchRef.current) {
+      skipInitialDataFetchRef.current = false;
+      return;
+    }
+
     fetchData();
   }, [fetchData]);
 
   // Fetch current user name on mount
   useEffect(() => {
+    if (skipInitialUserFetchRef.current) {
+      skipInitialUserFetchRef.current = false;
+      return;
+    }
+
     getCurrentUser().then((user) => {
       if (user) {
         setCurrentUserName(user.email);

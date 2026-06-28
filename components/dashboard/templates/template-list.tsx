@@ -6,10 +6,10 @@ import { Link } from "@/i18n/navigation";
 import { Plus, Mail } from "lucide-react";
 import { Button, SearchInput } from "@/components/ui";
 import { TemplateCard } from "./template-card";
-import { EmailTemplate } from "@/lib/types";
+import type { EmailTemplateSummary } from "@/lib/types";
 
 interface TemplateListProps {
-  templates: EmailTemplate[];
+  templates: EmailTemplateSummary[];
 }
 
 export function TemplateList({ templates }: TemplateListProps) {

@@ -78,7 +78,6 @@ export default function Sidebar({ allowedPages }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch={false}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   active
                     ? "bg-primary text-primary-foreground"
