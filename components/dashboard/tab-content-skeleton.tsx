@@ -103,7 +103,7 @@ function PaginationSkeleton() {
 
 export function DashboardHeaderSkeleton({ titleWidth = "w-48" }: { titleWidth?: string }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-6 backdrop-blur">
+    <header className="dashboard-skeleton sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/95 px-6 backdrop-blur">
       <Skeleton className={`h-6 ${titleWidth}`} />
       <div className="flex items-center gap-2">
         <Skeleton className="h-10 w-10 rounded-lg" />
@@ -118,7 +118,7 @@ export function DashboardRouteSkeleton({
   titleWidth = "w-48",
 }: DashboardRouteSkeletonProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="dashboard-skeleton min-h-screen bg-background">
       <DashboardHeaderSkeleton titleWidth={titleWidth} />
       <div className="p-6">{children}</div>
     </div>
@@ -127,7 +127,7 @@ export function DashboardRouteSkeleton({
 
 export function DashboardOverviewSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {range(4).map((index) => (
           <div key={index} className="rounded-xl border border-border bg-card p-6">
@@ -166,7 +166,7 @@ export function DashboardOverviewSkeleton() {
 
 export function TemplateGridSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Skeleton className="h-10 w-full sm:w-80" />
         <Skeleton className="h-10 w-36" />
@@ -196,7 +196,7 @@ export function TemplateGridSkeleton() {
 
 export function EmailSenderSkeleton() {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="dashboard-skeleton grid gap-6 lg:grid-cols-2">
       <div className="rounded-xl border border-border bg-card">
         <div className="border-b border-border p-6">
           <Skeleton className="h-6 w-40" />
@@ -226,7 +226,7 @@ export function EmailSenderSkeleton() {
 
 export function RegistrationsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <PageActionsSkeleton actions={2} />
       <FilterBarSkeleton filters={4} />
       <TableSkeleton columns={9} minWidth="min-w-[980px]" />
@@ -237,7 +237,7 @@ export function RegistrationsSkeleton() {
 
 export function ContactsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <PageActionsSkeleton actions={2} />
       <FilterBarSkeleton filters={3} />
       <TableSkeleton columns={8} minWidth="min-w-[920px]" />
@@ -248,7 +248,7 @@ export function ContactsSkeleton() {
 
 export function CampaignsSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <PageActionsSkeleton actions={1} />
       <FilterBarSkeleton filters={1} />
       <TableSkeleton columns={8} minWidth="min-w-[960px]" />
@@ -259,7 +259,7 @@ export function CampaignsSkeleton() {
 
 export function SalesBoardSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <Skeleton className="h-5 w-40" />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -325,7 +325,7 @@ export function SalesBoardSkeleton() {
 
 export function OnboardingSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {range(4).map((index) => (
           <div key={index} className="rounded-xl border border-border bg-card p-6">
@@ -361,7 +361,7 @@ export function OnboardingSkeleton() {
 
 export function UsersManagementSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="dashboard-skeleton space-y-6">
       <Skeleton className="h-5 w-full max-w-lg" />
 
       <div className="flex gap-2 border-b border-border">

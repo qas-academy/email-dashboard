@@ -69,6 +69,20 @@ body {
   color: var(--foreground);
 }
 
+.dark .dashboard-skeleton {
+  --skeleton-border: rgb(148 163 184 / 0.14);
+}
+
+.dark .dashboard-skeleton.border-border,
+.dark .dashboard-skeleton .border-border {
+  border-color: var(--skeleton-border);
+}
+
+.dark .dashboard-skeleton.divide-border > :not(:last-child),
+.dark .dashboard-skeleton .divide-border > :not(:last-child) {
+  border-color: var(--skeleton-border);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
