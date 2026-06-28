@@ -14,6 +14,10 @@ const SALES_STATUS_SET = new Set<SalesStatus>(SALES_STATUSES);
 
 let salesSchemaReady: Promise<void> | null = null;
 
+type SalesRegistrationRow = Omit<SalesRegistration, "id"> & {
+  id: number | string;
+};
+
 async function ensureSalesBoardSchema() {
   if (!salesSchemaReady) {
     salesSchemaReady = (async () => {
@@ -145,9 +149,27 @@ function serializeDate(value: string | Date | null | undefined) {
   return value instanceof Date ? value.toISOString() : value;
 }
 
-function normalizeSalesRegistration(registration: SalesRegistration): SalesRegistration {
+function parseRegistrationId(value: unknown) {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim()
+        ? Number(value)
+        : NaN;
+
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function normalizeSalesRegistration(registration: SalesRegistrationRow): SalesRegistration {
+  const id = parseRegistrationId(registration.id);
+
+  if (id === null) {
+    throw new Error("Invalid registration id returned from database.");
+  }
+
   return {
     ...registration,
+    id,
     created_at: serializeDate(registration.created_at) ?? "",
     updated_at: serializeDate(registration.updated_at) ?? "",
     test_date: serializeDate(registration.test_date),
@@ -220,7 +242,7 @@ export async function getSalesRegistrations(search = ""): Promise<SalesRegistrat
     `;
   }
 
-  const result = await query<SalesRegistration>(
+  const result = await query<SalesRegistrationRow>(
     `SELECT *
      FROM qas_registrations
      ${whereClause}
@@ -239,7 +261,7 @@ export async function createSalesRegistration(
 
   const normalized = normalizeCreateInput(input);
 
-  const result = await query<SalesRegistration>(
+  const result = await query<SalesRegistrationRow>(
     `INSERT INTO qas_registrations (
        first_name,
        last_name,
@@ -289,7 +311,7 @@ export async function createSalesRegistration(
 }
 
 export async function updateSalesRegistrationStatus(
-  id: number,
+  id: number | string,
   salesStatus: SalesStatus,
   salesAssigneeId?: string | null
 ): Promise<
@@ -299,7 +321,9 @@ export async function updateSalesRegistrationStatus(
   try {
     await ensureSalesBoardSchema();
 
-    if (!Number.isFinite(id)) {
+    const registrationId = parseRegistrationId(id);
+
+    if (registrationId === null) {
       return { success: false, error: "Registration id is required." };
     }
 
@@ -318,7 +342,7 @@ export async function updateSalesRegistrationStatus(
       }
     }
 
-    const result = await query<SalesRegistration>(
+    const result = await query<SalesRegistrationRow>(
       `UPDATE qas_registrations
        SET sales_status = $2,
            sales_assignee_id = COALESCE($3, sales_assignee_id),
@@ -328,7 +352,7 @@ export async function updateSalesRegistrationStatus(
        WHERE id = $1
        RETURNING *`,
       [
-        id,
+        registrationId,
         normalizedStatus,
         assignee?.id ?? null,
         assignee?.display_name ?? null,
@@ -350,14 +374,16 @@ export async function updateSalesRegistrationStatus(
   }
 }
 
-export async function deleteSalesRegistration(id: number): Promise<{ success: boolean }> {
+export async function deleteSalesRegistration(id: number | string): Promise<{ success: boolean }> {
   await ensureSalesBoardSchema();
 
-  if (!Number.isFinite(id)) {
+  const registrationId = parseRegistrationId(id);
+
+  if (registrationId === null) {
     throw new Error("Registration id is required.");
   }
 
-  await query(`DELETE FROM qas_registrations WHERE id = $1`, [id]);
+  await query(`DELETE FROM qas_registrations WHERE id = $1`, [registrationId]);
   revalidateSalesViews();
 
   return { success: true };
