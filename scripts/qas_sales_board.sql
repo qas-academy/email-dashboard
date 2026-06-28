@@ -3,7 +3,10 @@
 -- but this script can be run manually in Supabase SQL Editor.
 
 ALTER TABLE qas_registrations
-  ADD COLUMN IF NOT EXISTS sales_status TEXT;
+  ADD COLUMN IF NOT EXISTS sales_status TEXT,
+  ADD COLUMN IF NOT EXISTS sales_assignee_id TEXT,
+  ADD COLUMN IF NOT EXISTS sales_assignee_name TEXT,
+  ADD COLUMN IF NOT EXISTS sales_assignee_email TEXT;
 
 UPDATE qas_registrations
 SET sales_status = 'queue'
@@ -30,3 +33,6 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS qas_registrations_sales_status_created_at_idx
   ON qas_registrations (sales_status, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS qas_registrations_sales_assignee_id_idx
+  ON qas_registrations (sales_assignee_id);

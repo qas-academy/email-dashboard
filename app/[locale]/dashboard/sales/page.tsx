@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout";
 import { SalesBoardContent } from "@/components/dashboard/sales/sales-board-content";
 import { SalesBoardSkeleton } from "@/components/dashboard/tab-content-skeleton";
-import { getSalesRegistrations } from "@/actions/sales-actions";
+import { getSalesAssignees, getSalesRegistrations } from "@/actions/sales-actions";
 
 export default async function SalesPage() {
   const t = await getTranslations("sales");
@@ -21,7 +21,15 @@ export default async function SalesPage() {
 }
 
 async function SalesContent() {
-  const initialRegistrations = await getSalesRegistrations();
+  const [initialRegistrations, assignees] = await Promise.all([
+    getSalesRegistrations(),
+    getSalesAssignees(),
+  ]);
 
-  return <SalesBoardContent initialRegistrations={initialRegistrations} />;
+  return (
+    <SalesBoardContent
+      initialRegistrations={initialRegistrations}
+      assignees={assignees}
+    />
+  );
 }

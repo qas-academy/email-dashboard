@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  UserRound,
 } from "lucide-react";
 import {
   createSalesRegistration,
@@ -23,6 +24,7 @@ import {
   SALES_COLUMNS,
   SALES_STATUSES,
   type CreateSalesRegistrationInput,
+  type SalesAssignee,
   type SalesRegistration,
   type SalesStatus,
 } from "@/lib/types";
@@ -30,6 +32,7 @@ import { formatVietnamDate } from "@/lib/date-format";
 
 interface SalesBoardContentProps {
   initialRegistrations: SalesRegistration[];
+  assignees: SalesAssignee[];
 }
 
 interface SalesLeadFormState {
@@ -293,6 +296,169 @@ function AddLeadModal({ isOpen, onClose, onSubmit }: AddLeadModalProps) {
   );
 }
 
+interface AssignmentModalProps {
+  isOpen: boolean;
+  registration: SalesRegistration | null;
+  assignees: SalesAssignee[];
+  onClose: () => void;
+  onConfirm: (assignee: SalesAssignee) => void;
+}
+
+function getAssigneeLabel(assignee: SalesAssignee) {
+  return assignee.display_name || assignee.full_name || assignee.email;
+}
+
+function AssignmentModal({
+  isOpen,
+  registration,
+  assignees,
+  onClose,
+  onConfirm,
+}: AssignmentModalProps) {
+  const initialAssignee = useMemo(
+    () =>
+      assignees.find((assignee) => assignee.id === registration?.sales_assignee_id) ??
+      assignees[0] ??
+      null,
+    [assignees, registration?.sales_assignee_id]
+  );
+  const [query, setQuery] = useState(() =>
+    initialAssignee ? getAssigneeLabel(initialAssignee) : ""
+  );
+  const [selectedId, setSelectedId] = useState<string>(() => initialAssignee?.id ?? "");
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredAssignees = assignees.filter((assignee) => {
+    const label = getAssigneeLabel(assignee).toLowerCase();
+    return (
+      label.includes(normalizedQuery) ||
+      assignee.email.toLowerCase().includes(normalizedQuery) ||
+      assignee.role.toLowerCase().includes(normalizedQuery)
+    );
+  });
+  const selectedAssignee = assignees.find((assignee) => assignee.id === selectedId) ?? null;
+
+  const handleSelect = (assignee: SalesAssignee) => {
+    setSelectedId(assignee.id);
+    setQuery(getAssigneeLabel(assignee));
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (selectedAssignee) {
+      onConfirm(selectedAssignee);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Assign lead" size="lg">
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="rounded-lg border border-border bg-muted/30 p-3">
+          <p className="text-sm font-semibold text-foreground">
+            {registration ? formatName(registration) : "Selected lead"}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Choose an admin, internal, or sales user before moving this lead to Assigned.
+          </p>
+        </div>
+
+        {assignees.length === 0 ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            No active admin, internal, or sales users are available.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Assignee
+            </label>
+            <div className="relative">
+              <UserRound className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                role="combobox"
+                aria-expanded={filteredAssignees.length > 0}
+                aria-controls="sales-assignee-options"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setSelectedId("");
+                }}
+                placeholder="Search person..."
+                className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-3 text-sm text-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            <div
+              id="sales-assignee-options"
+              role="listbox"
+              className="max-h-56 overflow-y-auto rounded-lg border border-border bg-card p-1"
+            >
+              {filteredAssignees.length > 0 ? (
+                filteredAssignees.map((assignee) => {
+                  const isSelected = assignee.id === selectedId;
+
+                  return (
+                    <button
+                      key={assignee.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => handleSelect(assignee)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">
+                          {getAssigneeLabel(assignee)}
+                        </span>
+                        <span
+                          className={`block truncate text-xs ${
+                            isSelected
+                              ? "text-primary-foreground/80"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {assignee.email}
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${
+                          isSelected
+                            ? "bg-primary-foreground/20"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {assignee.role}
+                      </span>
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  No matching users
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={!selectedAssignee}>
+            Assign
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 interface LeadCardProps {
   registration: SalesRegistration;
   isBusy: boolean;
@@ -383,6 +549,17 @@ function LeadCardBody({
             {registration.discovery_source}
           </p>
         )}
+        {registration.sales_assignee_name && (
+          <p
+            className="flex min-w-0 items-center gap-2 text-amber-600 dark:text-amber-300"
+            title={registration.sales_assignee_email ?? registration.sales_assignee_name}
+          >
+            <UserRound className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">
+              {registration.sales_assignee_name}
+            </span>
+          </p>
+        )}
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
@@ -463,11 +640,15 @@ function DragPreviewCard({ preview }: { preview: DragPreview }) {
   );
 }
 
-export function SalesBoardContent({ initialRegistrations }: SalesBoardContentProps) {
+export function SalesBoardContent({
+  initialRegistrations,
+  assignees,
+}: SalesBoardContentProps) {
   const [registrations, setRegistrations] = useState(initialRegistrations);
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [assignmentTargetId, setAssignmentTargetId] = useState<number | null>(null);
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<SalesStatus | null>(null);
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
@@ -476,6 +657,10 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
   const [isPending, startTransition] = useTransition();
   const draggedIdRef = useRef<number | null>(null);
   const grouped = useMemo(() => groupByStatus(registrations), [registrations]);
+  const assignmentTarget =
+    assignmentTargetId !== null
+      ? registrations.find((registration) => registration.id === assignmentTargetId) ?? null
+      : null;
 
   const refresh = (search = searchQuery) => {
     setError(null);
@@ -488,7 +673,11 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
     });
   };
 
-  const moveRegistration = (id: number, status: SalesStatus) => {
+  const moveRegistration = (
+    id: number,
+    status: SalesStatus,
+    assignee?: SalesAssignee | null
+  ) => {
     const existing = registrations.find((registration) => registration.id === id);
     if (!existing || existing.sales_status === status) return;
 
@@ -496,13 +685,25 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
     setBusyId(id);
     setRegistrations((current) =>
       current.map((registration) =>
-        registration.id === id ? { ...registration, sales_status: status } : registration
+        registration.id === id
+          ? {
+              ...registration,
+              sales_status: status,
+              ...(assignee
+                ? {
+                    sales_assignee_id: assignee.id,
+                    sales_assignee_name: getAssigneeLabel(assignee),
+                    sales_assignee_email: assignee.email,
+                  }
+                : {}),
+            }
+          : registration
       )
     );
 
     startTransition(async () => {
       try {
-        const result = await updateSalesRegistrationStatus(id, status);
+        const result = await updateSalesRegistrationStatus(id, status, assignee?.id);
 
         if (!result.success) {
           throw new Error(result.error);
@@ -520,6 +721,27 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
         setBusyId(null);
       }
     });
+  };
+
+  const requestMoveRegistration = (id: number, status: SalesStatus) => {
+    if (status === "assigned") {
+      const existing = registrations.find((registration) => registration.id === id);
+
+      if (!existing || existing.sales_status === "assigned") return;
+
+      setAssignmentTargetId(id);
+      return;
+    }
+
+    moveRegistration(id, status);
+  };
+
+  const handleAssignAndMove = (assignee: SalesAssignee) => {
+    if (assignmentTargetId === null) return;
+
+    const id = assignmentTargetId;
+    setAssignmentTargetId(null);
+    moveRegistration(id, "assigned", assignee);
   };
 
   const handleCreate = async (input: CreateSalesRegistrationInput) => {
@@ -619,7 +841,7 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
     clearDragState();
 
     if (status) {
-      moveRegistration(id, status);
+      requestMoveRegistration(id, status);
     }
   };
 
@@ -718,7 +940,7 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
                       registration={registration}
                       isBusy={busyId === registration.id}
                       isDragging={draggedId === registration.id}
-                      onMove={moveRegistration}
+                      onMove={requestMoveRegistration}
                       onDelete={setDeleteTarget}
                       onPointerDragStart={handlePointerDragStart}
                       onPointerDragMove={handlePointerDragMove}
@@ -751,6 +973,15 @@ export function SalesBoardContent({ initialRegistrations }: SalesBoardContentPro
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onSubmit={handleCreate}
+      />
+
+      <AssignmentModal
+        key={assignmentTargetId ?? "assignment-closed"}
+        isOpen={assignmentTargetId !== null}
+        registration={assignmentTarget}
+        assignees={assignees}
+        onClose={() => setAssignmentTargetId(null)}
+        onConfirm={handleAssignAndMove}
       />
 
       <ConfirmDialog

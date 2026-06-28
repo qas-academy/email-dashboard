@@ -5,6 +5,7 @@ import { query } from "@/lib/db";
 import {
   SALES_STATUSES,
   type CreateSalesRegistrationInput,
+  type SalesAssignee,
   type SalesRegistration,
   type SalesStatus,
 } from "@/lib/types";
@@ -17,6 +18,9 @@ async function ensureSalesBoardSchema() {
   if (!salesSchemaReady) {
     salesSchemaReady = (async () => {
       await query(`ALTER TABLE qas_registrations ADD COLUMN IF NOT EXISTS sales_status TEXT`);
+      await query(`ALTER TABLE qas_registrations ADD COLUMN IF NOT EXISTS sales_assignee_id TEXT`);
+      await query(`ALTER TABLE qas_registrations ADD COLUMN IF NOT EXISTS sales_assignee_name TEXT`);
+      await query(`ALTER TABLE qas_registrations ADD COLUMN IF NOT EXISTS sales_assignee_email TEXT`);
       await query(`UPDATE qas_registrations SET sales_status = 'queue' WHERE sales_status IS NULL`);
       await query(
         `UPDATE qas_registrations
@@ -43,6 +47,10 @@ async function ensureSalesBoardSchema() {
       await query(
         `CREATE INDEX IF NOT EXISTS qas_registrations_sales_status_created_at_idx
          ON qas_registrations (sales_status, created_at DESC)`
+      );
+      await query(
+        `CREATE INDEX IF NOT EXISTS qas_registrations_sales_assignee_id_idx
+         ON qas_registrations (sales_assignee_id)`
       );
     })().catch((error) => {
       salesSchemaReady = null;
@@ -145,7 +153,52 @@ function normalizeSalesRegistration(registration: SalesRegistration): SalesRegis
     test_date: serializeDate(registration.test_date),
     next_email_date: serializeDate(registration.next_email_date),
     sales_status: parseSalesStatus(registration.sales_status),
+    sales_assignee_id: registration.sales_assignee_id ?? null,
+    sales_assignee_name: registration.sales_assignee_name ?? null,
+    sales_assignee_email: registration.sales_assignee_email ?? null,
   };
+}
+
+function normalizeAssignee(assignee: SalesAssignee): SalesAssignee {
+  return {
+    ...assignee,
+    display_name: assignee.display_name || assignee.full_name || assignee.email,
+  };
+}
+
+async function getAssignableSalesAssignee(id: string) {
+  const result = await query<SalesAssignee>(
+    `SELECT
+       id::text,
+       email,
+       full_name,
+       role,
+       COALESCE(NULLIF(full_name, ''), email) AS display_name
+     FROM app_users
+     WHERE id = $1
+       AND role IN ('admin', 'internal', 'sales')
+       AND is_active = true`,
+    [id]
+  );
+
+  return result.rows[0] ? normalizeAssignee(result.rows[0]) : null;
+}
+
+export async function getSalesAssignees(): Promise<SalesAssignee[]> {
+  const result = await query<SalesAssignee>(
+    `SELECT
+       id::text,
+       email,
+       full_name,
+       role,
+       COALESCE(NULLIF(full_name, ''), email) AS display_name
+     FROM app_users
+     WHERE role IN ('admin', 'internal', 'sales')
+       AND is_active = true
+     ORDER BY COALESCE(NULLIF(full_name, ''), email) ASC`
+  );
+
+  return result.rows.map(normalizeAssignee);
 }
 
 export async function getSalesRegistrations(search = ""): Promise<SalesRegistration[]> {
@@ -237,7 +290,8 @@ export async function createSalesRegistration(
 
 export async function updateSalesRegistrationStatus(
   id: number,
-  salesStatus: SalesStatus
+  salesStatus: SalesStatus,
+  salesAssigneeId?: string | null
 ): Promise<
   | { success: true; registration: SalesRegistration }
   | { success: false; error: string }
@@ -250,14 +304,36 @@ export async function updateSalesRegistrationStatus(
     }
 
     const normalizedStatus = parseSalesStatus(salesStatus);
+    let assignee: SalesAssignee | null = null;
+
+    if (normalizedStatus === "assigned") {
+      if (!salesAssigneeId) {
+        return { success: false, error: "Please choose an assignee." };
+      }
+
+      assignee = await getAssignableSalesAssignee(salesAssigneeId);
+
+      if (!assignee) {
+        return { success: false, error: "Selected assignee is not available." };
+      }
+    }
 
     const result = await query<SalesRegistration>(
       `UPDATE qas_registrations
        SET sales_status = $2,
+           sales_assignee_id = COALESCE($3, sales_assignee_id),
+           sales_assignee_name = COALESCE($4, sales_assignee_name),
+           sales_assignee_email = COALESCE($5, sales_assignee_email),
            updated_at = NOW()
        WHERE id = $1
        RETURNING *`,
-      [id, normalizedStatus]
+      [
+        id,
+        normalizedStatus,
+        assignee?.id ?? null,
+        assignee?.display_name ?? null,
+        assignee?.email ?? null,
+      ]
     );
 
     if (result.rows.length === 0) {

@@ -1,4 +1,5 @@
 import type { Registration } from "./registration";
+import type { UserRole } from "./rbac";
 
 export const SALES_STATUSES = ["queue", "contacted", "assigned", "won", "lost"] as const;
 
@@ -46,7 +47,18 @@ export const SALES_COLUMNS: SalesColumn[] = [
 
 export type SalesRegistration = Registration & {
   sales_status: SalesStatus;
+  sales_assignee_id: string | null;
+  sales_assignee_name: string | null;
+  sales_assignee_email: string | null;
 };
+
+export interface SalesAssignee {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: Extract<UserRole, "admin" | "internal" | "sales">;
+  display_name: string;
+}
 
 export interface CreateSalesRegistrationInput {
   full_name: string;
