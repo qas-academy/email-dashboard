@@ -281,9 +281,9 @@ export function SalesBoardSkeleton() {
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-5 w-7 rounded-full" />
               </div>
-              <div className="space-y-3 p-3">
+              <div className="divide-y divide-border">
                 {range(column === 0 ? 4 : 1).map((card) => (
-                  <div key={card} className="rounded-xl border border-border bg-card p-4">
+                  <div key={card} className="bg-card/55 px-4 py-4 dark:bg-card/30">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-4 w-36" />
@@ -306,7 +306,9 @@ export function SalesBoardSkeleton() {
                   </div>
                 ))}
                 {column > 0 && (
-                  <Skeleton className="h-20 w-full border border-dashed border-border bg-card/60" />
+                  <div className="px-4 py-10">
+                    <Skeleton className="mx-auto h-5 w-16" />
+                  </div>
                 )}
               </div>
             </div>

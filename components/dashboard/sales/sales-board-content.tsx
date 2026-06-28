@@ -19,7 +19,7 @@ import {
   getSalesRegistrations,
   updateSalesRegistrationStatus,
 } from "@/actions/sales-actions";
-import { Badge, Button, Card, ConfirmDialog, Input, Modal, Textarea } from "@/components/ui";
+import { Badge, Button, ConfirmDialog, Input, Modal, Textarea } from "@/components/ui";
 import {
   SALES_COLUMNS,
   SALES_STATUSES,
@@ -483,17 +483,17 @@ function LeadCard({
   onPointerDragCancel,
 }: LeadCardProps) {
   return (
-    <Card
+    <article
       onPointerDown={(event) => onPointerDragStart(event, registration)}
       onPointerMove={onPointerDragMove}
       onPointerUp={onPointerDragEnd}
       onPointerCancel={onPointerDragCancel}
-      className={`cursor-grab touch-none select-none p-4 transition hover:border-muted-foreground/40 active:cursor-grabbing ${
+      className={`cursor-grab touch-none select-none bg-card/55 px-4 py-4 transition hover:bg-card active:cursor-grabbing dark:bg-card/30 dark:hover:bg-card/45 ${
         isBusy ? "opacity-60" : ""
       } ${isDragging ? "opacity-40" : ""}`}
     >
       <LeadCardBody registration={registration} onMove={onMove} onDelete={onDelete} isBusy={isBusy} />
-    </Card>
+    </article>
   );
 }
 
@@ -933,7 +933,7 @@ export function SalesBoardContent({
                   </span>
                 </div>
 
-                <div className="space-y-3 p-3">
+                <div className="divide-y divide-border">
                   {columnRegistrations.map((registration) => (
                     <LeadCard
                       key={registration.id}
@@ -950,7 +950,7 @@ export function SalesBoardContent({
                   ))}
 
                   {columnRegistrations.length === 0 && (
-                    <div className="rounded-lg border border-dashed border-border bg-card/60 px-4 py-8 text-center text-sm font-medium text-muted-foreground">
+                    <div className="px-4 py-10 text-center text-sm font-medium text-muted-foreground">
                       Empty
                     </div>
                   )}
