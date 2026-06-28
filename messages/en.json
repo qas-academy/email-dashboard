@@ -21,6 +21,7 @@
     "templates": "Email Templates",
     "emailSender": "Send Emails",
     "registrations": "Registrations",
+    "sales": "Sales",
     "contacts": "Contacts",
     "campaigns": "Campaigns",
     "campaignMetrics": "Campaign Metrics",
@@ -223,6 +224,9 @@
       "yes": "Yes",
       "no": "No"
     }
+  },
+  "sales": {
+    "title": "Sales"
   },
   "dashboard": {
     "title": "Dashboard",
