@@ -6,3 +6,4 @@ export * from "./contact";
 export * from "./campaign-log";
 export * from "./rbac";
 export * from "./onboarding";
+export * from "./sales";
